@@ -1,0 +1,47 @@
+.edit {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  padding: 1px 4px;
+  margin: -1px -4px;
+  color: inherit;
+  font: inherit;
+  min-width: 1ch;
+}
+.edit:hover {
+  background: rgba(255, 255, 255, 0.03);
+  box-shadow: 0 0 0 1px var(--bd-2);
+}
+.edit:focus {
+  background: var(--bg-input);
+  border-color: var(--accent-line);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+/* full-width auto-height textarea (free text, prompts) — height grows via JS,
+   no manual drag-resize handle */
+.edit.area {
+  display: block;
+  width: 100%;
+  resize: none;
+  line-height: 1.5;
+}
+
+/* inline content-sized field (challenge / response). Stays on a single line
+   and only wraps on an explicit newline the user types. */
+.edit.inline {
+  field-sizing: content;
+  white-space: pre;
+  resize: none;
+  overflow: hidden;
+  line-height: 1.4;
+  vertical-align: top;
+  min-width: 2ch;
+}
+.edit.rs {
+  text-align: right;
+}
+.edit.grow {
+  flex: 1;
+  width: 100%;
+}

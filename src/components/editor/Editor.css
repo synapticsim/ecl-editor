@@ -1,0 +1,174 @@
+.m-head {
+  border-bottom: 1px solid var(--bd-1);
+  padding: 10px 18px 12px;
+  background: var(--bg-1);
+}
+.m-breadcrumb {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--fg-3);
+  margin-bottom: 6px;
+}
+.m-breadcrumb .slash {
+  color: var(--fg-4);
+  margin: 0 6px;
+}
+.m-breadcrumb .current {
+  color: var(--fg-2);
+}
+.m-title-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+.m-title {
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--fg-1);
+}
+.m-meta {
+  margin-left: auto;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  color: var(--fg-3);
+  font-size: 11px;
+  font-family: var(--font-mono);
+}
+.m-meta .badge {
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: var(--bg-2);
+  color: var(--fg-2);
+  border: 1px solid var(--bd-1);
+}
+
+.m-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 18px 24px 80px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--bd-2) transparent;
+}
+.m-body::-webkit-scrollbar {
+  width: 10px;
+}
+.m-body::-webkit-scrollbar-thumb {
+  background: var(--bd-2);
+  border-radius: 5px;
+}
+.m-empty {
+  color: var(--fg-3);
+  font-size: 13px;
+  padding: 40px;
+  text-align: center;
+}
+
+/* ── inline add-item control ─────────────────────────────────── */
+.add-ctl {
+  position: relative;
+}
+
+/* between-rows: a thin gap that reveals a centered + line on hover */
+.add-ctl-between {
+  height: 8px;
+  display: flex;
+  align-items: center;
+}
+.add-ctl-between .add-ctl-trigger {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+.add-ctl-between:hover .add-ctl-trigger,
+.add-ctl-between.open {
+  opacity: 1;
+}
+/* sole control inside an empty branch — keep it discoverable */
+.vH-branch-items.empty .add-ctl-between .add-ctl-trigger {
+  opacity: 1;
+}
+.add-ctl-between .add-ctl-trigger::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--accent-line);
+}
+.add-ctl-between .add-ctl-plus {
+  margin-left: 30px; /* line up under the row number gutter */
+}
+
+/* end-of-list: persistent add affordance */
+.add-ctl-end {
+  margin-top: 6px;
+}
+.add-ctl-end .add-ctl-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 10px 5px 6px;
+  border-radius: 5px;
+  color: var(--fg-3);
+  font-size: 11.5px;
+  border: 1px dashed transparent;
+}
+.add-ctl-end .add-ctl-trigger:hover {
+  color: var(--accent);
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
+}
+
+.add-ctl-plus {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* expanded type picker */
+.add-ctl-menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 6px;
+  border: 1px solid var(--bd-2);
+  border-radius: 6px;
+  background: var(--bg-2);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+.add-ctl-between.open .add-ctl-menu {
+  margin: 2px 0;
+}
+.add-ctl-menu button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  padding: 0 9px;
+  border-radius: 4px;
+  font-size: 11px;
+  color: var(--fg-2);
+  border: 1px solid var(--bd-1);
+}
+.add-ctl-menu button:hover {
+  background: var(--bg-3);
+  color: var(--fg-1);
+  border-color: var(--bd-2);
+}
+.add-ctl-menu button .swatch {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--swatch);
+}

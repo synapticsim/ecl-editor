@@ -1,0 +1,332 @@
+/* Variation H item rendering */
+.vH {
+  font-family: var(--font-sans);
+  color: var(--fg-1);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.vH-row,
+.vH-block-head,
+.vH-ff {
+  display: grid;
+  grid-template-columns: 30px 14px 4px 1fr;
+  column-gap: 14px;
+  align-items: stretch;
+}
+
+.vH-row {
+  padding: 5px 6px 6px 0;
+  border-radius: 4px;
+  position: relative;
+}
+.vH-row:hover {
+  background: rgba(255, 255, 255, 0.022);
+}
+
+.vH-num {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--fg-4);
+  text-align: right;
+  padding-top: 3px;
+  user-select: none;
+}
+.vH-drag {
+  color: var(--fg-4);
+  font-size: 11px;
+  text-align: center;
+  padding-top: 3px;
+  opacity: 0;
+  transition: opacity 0.12s;
+  letter-spacing: -1px;
+  cursor: grab;
+  touch-action: none;
+}
+.vH-row:hover .vH-drag,
+.vH-block:hover .vH-drag,
+.vH-ff:hover .vH-drag {
+  opacity: 0.7;
+}
+
+.vH-bar {
+  position: relative;
+  align-self: stretch;
+}
+.vH-bar::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 2px;
+  bottom: 2px;
+  width: 3px;
+  border-radius: 1.5px;
+  background: var(--ic);
+}
+
+.vH-body {
+  padding-top: 1px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.vH-action {
+  display: grid;
+  grid-template-columns: minmax(0, auto) 1fr minmax(0, auto);
+  align-items: start;
+  column-gap: 8px;
+  padding-right: 18px;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+}
+.vH-ch {
+  color: var(--fg-1);
+  font-weight: 500;
+}
+.vH-rs {
+  color: var(--ic);
+  font-weight: 500;
+}
+.vH-dots {
+  height: 1px;
+  align-self: center;
+  background-image: radial-gradient(circle, #3a3947 0.7px, transparent 0.8px);
+  background-size: 4px 1px;
+  background-repeat: repeat-x;
+  background-position: center;
+  margin: 0 4px;
+  min-width: 16px;
+}
+.vH-meta {
+  margin-top: 3px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  display: flex;
+  gap: 4px;
+  align-items: baseline;
+}
+.vH-meta-k {
+  color: var(--sensed);
+  opacity: 0.7;
+}
+.vH-meta-eq {
+  color: var(--fg-4);
+}
+.vH-meta-v {
+  color: var(--sensed);
+}
+.vH-ext {
+  margin-top: 3px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--fg-3);
+  display: flex;
+  gap: 4px;
+  align-items: baseline;
+}
+.vH-ext-k {
+  color: var(--fg-4);
+}
+
+.vH-text {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--fg-1);
+  font-weight: 500;
+}
+
+/* bordered conditional/multi container — no fill */
+.vH-block {
+  margin: 6px 0;
+  border: 1px solid color-mix(in oklab, var(--ic) 30%, transparent);
+  border-radius: 5px;
+  background: transparent;
+}
+.vH-block-head {
+  padding: 8px 12px 8px 0;
+  align-items: center;
+  border-bottom: 1px dashed color-mix(in oklab, var(--ic) 22%, transparent);
+  position: relative;
+}
+.vH-block-prompt {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--fg-1);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  padding-left: 4px;
+  min-width: 0;
+  flex: 1;
+}
+.vH-block-pill {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 2px 7px;
+  border-radius: 3px;
+  background: color-mix(in oklab, var(--ic) 18%, transparent);
+  color: var(--ic);
+  border: 1px solid color-mix(in oklab, var(--ic) 38%, transparent);
+  flex-shrink: 0;
+}
+
+.vH-block-body {
+  padding: 4px 0 6px;
+}
+
+.vH-branch-label {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 6px 12px 4px 58px;
+  color: var(--ic);
+  font-size: 11px;
+}
+.vH-branch-pill {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: color-mix(in oklab, var(--ic) 16%, transparent);
+  border: 1px solid color-mix(in oklab, var(--ic) 36%, transparent);
+  flex-shrink: 0;
+}
+.vH-branch-text {
+  color: var(--fg-1);
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 12px;
+}
+.vH-branch-del {
+  color: var(--fg-4);
+  font-size: 12px;
+  padding: 0 4px;
+  border-radius: 3px;
+  opacity: 0;
+}
+.vH-branch-label:hover .vH-branch-del {
+  opacity: 0.6;
+}
+.vH-branch-del:hover {
+  opacity: 1 !important;
+  color: #f87171;
+}
+
+.vH-branch-items {
+  padding-left: 14px;
+  min-height: 6px;
+}
+/* empty branch: a slim, text-free drop zone */
+.vH-branch-items.empty {
+  margin: 2px 12px 4px 58px;
+  min-height: 22px;
+  border: 1px dashed var(--bd-1);
+  border-radius: 4px;
+}
+.vH-branch-items.empty.drop-active {
+  border-color: var(--accent-line);
+}
+.vH-branch-add {
+  margin: 2px 12px 4px 58px;
+  padding: 4px 8px;
+  border: 1px dashed var(--bd-1);
+  border-radius: 4px;
+  color: var(--fg-4);
+  font-size: 10.5px;
+  font-family: var(--font-mono);
+}
+.vH-branch-add:hover {
+  border-color: var(--accent-line);
+  color: var(--accent);
+}
+
+/* form feed */
+.vH-ff {
+  padding: 4px 6px 4px 0;
+  align-items: center;
+  position: relative;
+}
+.vH-ff-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ic);
+}
+.vH-ff-line {
+  flex: 1;
+  height: 1px;
+  background-image: linear-gradient(90deg, var(--ic) 50%, transparent 50%);
+  background-size: 5px 1px;
+  opacity: 0.4;
+}
+.vH-ff-label {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* delete affordance on rows/blocks */
+.vH-del {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  opacity: 0;
+  color: var(--fg-4);
+  font-size: 14px;
+  line-height: 1;
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  transition: opacity 0.12s;
+  z-index: 2;
+}
+.vH-row:hover .vH-del,
+.vH-block-head:hover .vH-del,
+.vH-ff:hover .vH-del {
+  opacity: 0.55;
+}
+.vH-del:hover {
+  opacity: 1 !important;
+  color: #f87171;
+  background: rgba(248, 113, 113, 0.1);
+}
+
+/* drag state */
+.dragging {
+  opacity: 0.35;
+}
+.drop-active {
+  background: var(--accent-soft);
+  border-radius: 4px;
+}
+
+/* drag overlay — the lifted clone that follows the cursor */
+.overlay {
+  background: var(--bg-2);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55);
+  border-radius: 5px;
+  cursor: grabbing;
+}
+.overlay .vH-drag {
+  opacity: 0.7;
+}
+.overlay .vH-action,
+.overlay .vH-text {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+}
+.overlay .vH-rs {
+  color: var(--ic);
+}
