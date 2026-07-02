@@ -1,6 +1,6 @@
 import type { FreeTextItem } from "../../../checklist";
-import { useDispatch } from "../../../state";
 import { ITEM_TYPE_META } from "../../../itemUtils";
+import { useDispatch } from "../../../state";
 import { EditableText } from "../../common/EditableText";
 import { RowFrame } from "./RowFrame";
 

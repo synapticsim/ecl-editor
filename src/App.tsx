@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { StoreProvider } from "./StoreProvider";
+
 import { ConfirmProvider } from "./components/common/ConfirmDialog";
-import { TopBar } from "./components/TopBar";
-import { Sidebar } from "./components/sidebar/Sidebar";
 import { Editor } from "./components/editor/Editor";
 import { Preview } from "./components/preview/Preview";
+import { Sidebar } from "./components/sidebar/Sidebar";
+import { TopBar } from "./components/TopBar";
+import { StoreProvider } from "./StoreProvider";
 
 const LEFT_MIN = 200;
 const LEFT_MAX = 480;

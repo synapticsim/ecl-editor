@@ -5,7 +5,7 @@ export function highlightJson(jsonStr: string): string[] {
         // strings — keys (followed by ":") vs values
         line = line.replace(/"([^"\\]*(?:\\.[^"\\]*)*)"(\s*:)?/g, (_m, body: string, colon?: string) => {
             const cls = colon ? "k" : "s";
-            return `<span class="${cls}">"${body}"</span>` + (colon || "");
+            return `<span class="${cls}">"${body}"</span>${colon || ""}`;
         });
         // numbers
         line = line.replace(/(?<![\w"])(-?\d+\.?\d*)(?![\w"])/g, '<span class="n">$1</span>');

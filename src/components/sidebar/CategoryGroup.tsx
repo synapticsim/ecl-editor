@@ -1,17 +1,11 @@
-import {
-    DndContext,
-    closestCenter,
-    PointerSensor,
-    useSensor,
-    useSensors,
-    type DragEndEvent,
-} from "@dnd-kit/core";
+import { closestCenter, DndContext, type DragEndEvent, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+
 import type { Category, CategoryEntry } from "../../checklist";
 import { isHeader } from "../../checklist";
-import { useDispatch } from "../../state";
 import { Icon } from "../../icons";
+import { useDispatch } from "../../state";
 import { EditableText } from "../common/EditableText";
 import { ChecklistLeaf } from "./ChecklistLeaf";
 
@@ -26,16 +20,7 @@ interface Props {
     onSelect: (id: string) => void;
 }
 
-export function CategoryGroup({
-    dbId,
-    label,
-    category,
-    entries,
-    allowHeaders,
-    selectedId,
-    query,
-    onSelect,
-}: Props) {
+export function CategoryGroup({ dbId, label, category, entries, allowHeaders, selectedId, query, onSelect }: Props) {
     const dispatch = useDispatch();
     const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
     const checklistCount = entries.filter((e) => !isHeader(e)).length;
@@ -54,9 +39,7 @@ export function CategoryGroup({
     }
 
     const q = query.trim().toLowerCase();
-    const filtered = q
-        ? entries.filter((e) => !isHeader(e) && e.name.toLowerCase().includes(q))
-        : entries;
+    const filtered = q ? entries.filter((e) => !isHeader(e) && e.name.toLowerCase().includes(q)) : entries;
 
     function renderEntry(entry: CategoryEntry) {
         if (isHeader(entry)) {

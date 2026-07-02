@@ -1,62 +1,62 @@
 .modal-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(2px);
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(2px);
 }
 
 .modal {
-  width: 380px;
-  max-width: calc(100vw - 32px);
-  background: var(--bg-2);
-  border: 1px solid var(--bd-2);
-  border-radius: 8px;
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
-  padding: 18px;
+    width: 380px;
+    max-width: calc(100vw - 32px);
+    background: var(--bg-2);
+    border: 1px solid var(--bd-2);
+    border-radius: 8px;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
+    padding: 18px;
 }
 
 .modal-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--fg-1);
-  margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--fg-1);
+    margin-bottom: 8px;
 }
 
 .modal-msg {
-  font-size: 12px;
-  line-height: 1.5;
-  color: var(--fg-2);
-  margin-bottom: 18px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--fg-2);
+    margin-bottom: 18px;
 }
 
 .modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
 }
 
 .modal-btn {
-  padding: 6px 14px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--fg-2);
-  border: 1px solid var(--bd-2);
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--fg-2);
+    border: 1px solid var(--bd-2);
 }
 .modal-btn:hover {
-  background: var(--bg-3);
-  color: var(--fg-1);
+    background: var(--bg-3);
+    color: var(--fg-1);
 }
 .modal-btn.danger {
-  color: #fca5a5;
-  border-color: rgba(248, 113, 113, 0.4);
-  background: rgba(248, 113, 113, 0.1);
+    color: #fca5a5;
+    border-color: rgba(248, 113, 113, 0.4);
+    background: rgba(248, 113, 113, 0.1);
 }
 .modal-btn.danger:hover {
-  background: rgba(248, 113, 113, 0.18);
-  color: #fecaca;
+    background: rgba(248, 113, 113, 0.18);
+    color: #fecaca;
 }

@@ -1,11 +1,12 @@
 import type { ChecklistItem } from "../../checklist";
 import "./items/items.css";
+
 import { ActionItemView } from "./items/ActionItemView";
-import { SensedItemView } from "./items/SensedItemView";
 import { ConditionalItemView } from "./items/ConditionalItemView";
-import { MultiSelectItemView } from "./items/MultiSelectItemView";
-import { FreeTextItemView } from "./items/FreeTextItemView";
 import { FormFeedItemView } from "./items/FormFeedItemView";
+import { FreeTextItemView } from "./items/FreeTextItemView";
+import { MultiSelectItemView } from "./items/MultiSelectItemView";
+import { SensedItemView } from "./items/SensedItemView";
 
 export function ChecklistItemView({ item, number }: { item: ChecklistItem; number: string }) {
     switch (item.type) {

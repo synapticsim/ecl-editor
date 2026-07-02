@@ -1,7 +1,8 @@
 import { useState } from "react";
 import "./Sidebar.css";
-import { useAppState, useDispatch } from "../../state";
+
 import { Icon } from "../../icons";
+import { useAppState, useDispatch } from "../../state";
 import { DatabaseNode } from "./DatabaseNode";
 
 export function Sidebar() {
@@ -13,11 +14,7 @@ export function Sidebar() {
         <aside className="panel panel-l">
             <div className="l-search">
                 <Icon name="search" size={11} />
-                <input
-                    placeholder="Search checklists…"
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                />
+                <input placeholder="Search checklists…" value={query} onChange={(e) => setQuery(e.target.value)} />
             </div>
 
             <div className="l-body">

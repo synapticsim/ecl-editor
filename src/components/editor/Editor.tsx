@@ -1,24 +1,25 @@
 import { useState } from "react";
 import "./Editor.css";
 import {
-    DndContext,
-    DragOverlay,
-    MeasuringStrategy,
-    closestCenter,
-    getFirstCollision,
-    pointerWithin,
-    rectIntersection,
-    PointerSensor,
-    useSensor,
-    useSensors,
     type CollisionDetection,
+    closestCenter,
+    DndContext,
     type DragEndEvent,
     type DragOverEvent,
+    DragOverlay,
     type DragStartEvent,
+    getFirstCollision,
+    MeasuringStrategy,
+    PointerSensor,
+    pointerWithin,
+    rectIntersection,
+    useSensor,
+    useSensors,
 } from "@dnd-kit/core";
+
 import type { ChecklistItem } from "../../checklist";
-import { ROOT_DROP_ID, branchDropId, parseDropId, useDispatch, useSelectedChecklist } from "../../state";
 import { findItem } from "../../itemUtils";
+import { branchDropId, parseDropId, ROOT_DROP_ID, useDispatch, useSelectedChecklist } from "../../state";
 import { EditorHeader } from "./EditorHeader";
 import { ItemList } from "./ItemList";
 import { ItemOverlay } from "./ItemOverlay";
@@ -74,9 +75,7 @@ export function Editor() {
             if (childIds.length > 0) {
                 const closest = closestCenter({
                     ...args,
-                    droppableContainers: args.droppableContainers.filter((c) =>
-                        childIds.includes(String(c.id)),
-                    ),
+                    droppableContainers: args.droppableContainers.filter((c) => childIds.includes(String(c.id))),
                 });
                 const inner = getFirstCollision(closest, "id");
                 if (inner != null) overId = inner;

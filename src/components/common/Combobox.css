@@ -1,100 +1,100 @@
 .cbx {
-  display: inline-block;
-  position: relative;
+    display: inline-block;
+    position: relative;
 }
 
 .cbx-trigger,
 .cbx-input {
-  font-family: var(--font-mono);
-  font-size: 10.5px;
-  color: inherit;
-  background: var(--bg-input);
-  border: 1px solid var(--bd-1);
-  border-radius: 4px;
-  padding: 2px 6px;
-  min-width: 150px;
-  height: 20px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: inherit;
+    background: var(--bg-input);
+    border: 1px solid var(--bd-1);
+    border-radius: 4px;
+    padding: 2px 6px;
+    min-width: 150px;
+    height: 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
 }
 .cbx-trigger:hover {
-  border-color: var(--bd-2);
+    border-color: var(--bd-2);
 }
 .cbx-input {
-  width: 200px;
+    width: 200px;
 }
 .cbx-input:focus {
-  border-color: var(--accent-line);
-  box-shadow: 0 0 0 2px var(--accent-soft);
+    border-color: var(--accent-line);
+    box-shadow: 0 0 0 2px var(--accent-soft);
 }
 .cbx-val {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 .cbx-ph {
-  color: var(--fg-4);
+    color: var(--fg-4);
 }
 .cbx-caret {
-  margin-left: auto;
-  color: var(--fg-4);
-  display: inline-flex;
-  align-items: center;
+    margin-left: auto;
+    color: var(--fg-4);
+    display: inline-flex;
+    align-items: center;
 }
 
 .cbx-menu {
-  position: fixed;
-  z-index: 200;
-  max-height: 300px;
-  overflow-y: auto;
-  margin: 0;
-  padding: 5px;
-  list-style: none;
-  background: var(--bg-2);
-  border: 1px solid var(--bd-2);
-  border-radius: 8px;
-  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.6);
-  scrollbar-width: thin;
-  scrollbar-color: var(--bd-2) transparent;
-  font-family: var(--font-mono);
-  font-size: 11px;
+    position: fixed;
+    z-index: 200;
+    max-height: 300px;
+    overflow-y: auto;
+    margin: 0;
+    padding: 5px;
+    list-style: none;
+    background: var(--bg-2);
+    border: 1px solid var(--bd-2);
+    border-radius: 8px;
+    box-shadow: 0 14px 40px rgba(0, 0, 0, 0.6);
+    scrollbar-width: thin;
+    scrollbar-color: var(--bd-2) transparent;
+    font-family: var(--font-mono);
+    font-size: 11px;
 }
 .cbx-menu::-webkit-scrollbar {
-  width: 8px;
+    width: 8px;
 }
 .cbx-menu::-webkit-scrollbar-thumb {
-  background: var(--bd-2);
-  border-radius: 4px;
+    background: var(--bd-2);
+    border-radius: 4px;
 }
 .cbx-opt {
-  padding: 7px 10px;
-  border-radius: 5px;
-  color: var(--fg-2);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  white-space: nowrap;
+    padding: 7px 10px;
+    border-radius: 5px;
+    color: var(--fg-2);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
 }
 .cbx-opt.hl {
-  background: var(--bg-3);
-  color: var(--fg-1);
+    background: var(--bg-3);
+    color: var(--fg-1);
 }
 .cbx-opt-label {
-  overflow: hidden;
-  text-overflow: ellipsis;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 .cbx-opt.sel {
-  color: var(--accent);
+    color: var(--accent);
 }
 .cbx-check {
-  margin-left: auto;
-  display: inline-flex;
-  align-items: center;
-  color: var(--accent);
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    color: var(--accent);
 }
 .cbx-empty {
-  padding: 8px 10px;
-  color: var(--fg-4);
+    padding: 8px 10px;
+    color: var(--fg-4);
 }

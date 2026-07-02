@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
+
 import type { ItemType } from "../../checklist";
-import { useDispatch, type ListLoc } from "../../state";
-import { ITEM_TYPE_META } from "../../itemUtils";
 import { Icon } from "../../icons";
+import { ITEM_TYPE_META } from "../../itemUtils";
+import { type ListLoc, useDispatch } from "../../state";
 
 const TYPES: ItemType[] = ["action", "sensed", "conditional", "multi-select", "free-text", "form-feed"];
 

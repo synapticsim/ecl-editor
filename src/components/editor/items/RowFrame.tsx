@@ -1,6 +1,7 @@
-import type { ReactNode } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import type { ReactNode } from "react";
+
 import type { ChecklistItem } from "../../../checklist";
 import { useDispatch } from "../../../state";
 

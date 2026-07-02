@@ -1,7 +1,7 @@
 import type { Checklist, ChecklistDatabase } from "../../checklist";
 import { CATEGORY_LABELS, isHeader } from "../../checklist";
-import { useDispatch } from "../../state";
 import { countItems, maxDepth } from "../../itemUtils";
+import { useDispatch } from "../../state";
 import { EditableText } from "../common/EditableText";
 
 function sectionFor(db: ChecklistDatabase | null, checklistId: string): string | null {

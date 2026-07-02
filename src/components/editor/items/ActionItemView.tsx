@@ -1,6 +1,6 @@
 import type { ActionItem } from "../../../checklist";
-import { useDispatch } from "../../../state";
 import { ITEM_TYPE_META } from "../../../itemUtils";
+import { useDispatch } from "../../../state";
 import { EditableText } from "../../common/EditableText";
 import { RowFrame } from "./RowFrame";
 
@@ -12,11 +12,24 @@ export function ActionItemView({ item, number }: { item: ActionItem; number: str
         <RowFrame item={item} number={number} color={ITEM_TYPE_META.action.cssVar}>
             <div className="vH-action">
                 <span className="vH-ch">
-                    <EditableText value={item.challenge} onCommit={(v) => update({ challenge: v })} multiline autoSize placeholder="CHALLENGE" />
+                    <EditableText
+                        value={item.challenge}
+                        onCommit={(v) => update({ challenge: v })}
+                        multiline
+                        autoSize
+                        placeholder="CHALLENGE"
+                    />
                 </span>
                 <span className="vH-dots" />
                 <span className="vH-rs">
-                    <EditableText value={item.response ?? ""} onCommit={(v) => update({ response: v })} multiline autoSize align="right" placeholder="response" />
+                    <EditableText
+                        value={item.response ?? ""}
+                        onCommit={(v) => update({ response: v })}
+                        multiline
+                        autoSize
+                        align="right"
+                        placeholder="response"
+                    />
                 </span>
             </div>
             {item.extension !== undefined && item.extension !== "" && (

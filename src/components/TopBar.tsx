@@ -1,8 +1,9 @@
 import { useRef } from "react";
 import "./TopBar.css";
+
 import { CATEGORY_LABELS, isHeader } from "../checklist";
-import { useDispatch, useSaveStatus, useSelectedChecklist } from "../state";
 import { parseChecklist, serializeChecklist } from "../schemas";
+import { useDispatch, useSaveStatus, useSelectedChecklist } from "../state";
 
 function sectionFor(db: ReturnType<typeof useSelectedChecklist>["db"], checklistId: string): string | null {
     if (!db) return null;
@@ -68,9 +69,7 @@ export function TopBar() {
             <div className="brand">
                 <span className="brand-dot" />
                 <span>Synaptic</span>
-                <span style={{ color: "var(--fg-4)", fontWeight: 400, marginLeft: 4 }}>
-                    checklist editor
-                </span>
+                <span style={{ color: "var(--fg-4)", fontWeight: 400, marginLeft: 4 }}>checklist editor</span>
             </div>
             <span className="sep" />
             <span className="file mono">

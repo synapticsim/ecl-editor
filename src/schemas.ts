@@ -1,9 +1,6 @@
 import { z } from "zod";
-import type {
-    Checklist,
-    ChecklistItem,
-    Category,
-} from "./checklist";
+
+import type { Category, Checklist, ChecklistItem } from "./checklist";
 
 let counter = 0;
 export function uid(prefix = "id"): string {
@@ -75,9 +72,7 @@ function stripItem(it: ChecklistItem): ExternalItem {
             return {
                 type: "multi-select",
                 challenge: it.challenge,
-                paths: Object.fromEntries(
-                    Object.entries(it.paths).map(([k, v]) => [k, v.map(stripItem)]),
-                ),
+                paths: Object.fromEntries(Object.entries(it.paths).map(([k, v]) => [k, v.map(stripItem)])),
             };
         case "free-text":
             return { type: "free-text", text: it.text };
@@ -89,7 +84,13 @@ function stripItem(it: ChecklistItem): ExternalItem {
 function hydrateItem(it: ExternalItem): ChecklistItem {
     switch (it.type) {
         case "action":
-            return { type: "action", id: uid("i"), challenge: it.challenge, response: it.response, extension: it.extension };
+            return {
+                type: "action",
+                id: uid("i"),
+                challenge: it.challenge,
+                response: it.response,
+                extension: it.extension,
+            };
         case "sensed":
             return { type: "sensed", id: uid("i"), challenge: it.challenge, response: it.response, sensed: it.sensed };
         case "conditional":
@@ -104,9 +105,7 @@ function hydrateItem(it: ExternalItem): ChecklistItem {
                 type: "multi-select",
                 id: uid("i"),
                 challenge: it.challenge,
-                paths: Object.fromEntries(
-                    Object.entries(it.paths).map(([k, v]) => [k, v.map(hydrateItem)]),
-                ),
+                paths: Object.fromEntries(Object.entries(it.paths).map(([k, v]) => [k, v.map(hydrateItem)])),
             };
         case "free-text":
             return { type: "free-text", id: uid("i"), text: it.text };
@@ -127,9 +126,7 @@ export function serializeChecklist(cl: Checklist): string {
     return JSON.stringify(toExport(cl), null, 2);
 }
 
-export type ParseResult =
-    | { ok: true; checklist: Checklist }
-    | { ok: false; error: string };
+export type ParseResult = { ok: true; checklist: Checklist } | { ok: false; error: string };
 
 export function parseChecklist(json: string, category?: Category): ParseResult {
     let raw: unknown;

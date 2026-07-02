@@ -1,6 +1,6 @@
 import type { MultiSelectItem } from "../../../checklist";
-import { useDispatch } from "../../../state";
 import { ITEM_TYPE_META } from "../../../itemUtils";
+import { useDispatch } from "../../../state";
 import { EditableText } from "../../common/EditableText";
 import { ItemList } from "../ItemList";
 import { BlockFrame } from "./BlockFrame";

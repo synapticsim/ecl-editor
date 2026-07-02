@@ -1,8 +1,9 @@
 import { useState } from "react";
+
 import type { ChecklistDatabase } from "../../checklist";
+import { Icon } from "../../icons";
 import { useDispatch } from "../../state";
 import { useConfirm } from "../common/confirmContext";
-import { Icon } from "../../icons";
 import { EditableText } from "../common/EditableText";
 import { CategoryGroup } from "./CategoryGroup";
 

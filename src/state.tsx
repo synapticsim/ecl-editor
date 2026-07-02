@@ -1,21 +1,20 @@
-import { createContext, useContext, type Dispatch } from "react";
+import { createContext, type Dispatch, useContext } from "react";
+
 import type {
     Category,
+    CategoryEntry,
     Checklist,
     ChecklistDatabase,
     ChecklistItem,
-    CategoryEntry,
     ItemType,
     SectionHeader,
 } from "./checklist";
 import { isHeader } from "./checklist";
-import { uid } from "./schemas";
 import { seedDatabases } from "./mockData";
+import { uid } from "./schemas";
 
 /* ── list location within the selected checklist ──────────────── */
-export type ListLoc =
-    | { kind: "root" }
-    | { kind: "branch"; parentId: string; key: string };
+export type ListLoc = { kind: "root" } | { kind: "branch"; parentId: string; key: string };
 
 export const ROOT_DROP_ID = "list:root";
 export function branchDropId(parentId: string, key: string): string {
@@ -109,10 +108,7 @@ function updateItem(
 }
 
 /** Remove an item by id; returns the new tree and the removed item. */
-function removeItem(
-    items: ChecklistItem[],
-    id: string,
-): { tree: ChecklistItem[]; removed: ChecklistItem | null } {
+function removeItem(items: ChecklistItem[], id: string): { tree: ChecklistItem[]; removed: ChecklistItem | null } {
     let removed: ChecklistItem | null = null;
     const tree: ChecklistItem[] = [];
     for (const it of items) {
@@ -134,11 +130,7 @@ function removeItem(
 }
 
 /** Replace the list at the given location. */
-function replaceList(
-    items: ChecklistItem[],
-    loc: ListLoc,
-    newList: ChecklistItem[],
-): ChecklistItem[] {
+function replaceList(items: ChecklistItem[], loc: ListLoc, newList: ChecklistItem[]): ChecklistItem[] {
     if (loc.kind === "root") return newList;
     return updateItem(items, loc.parentId, (it) => withChildList(it, loc.key, newList));
 }
@@ -184,10 +176,7 @@ function makeItem(type: ItemType): ChecklistItem {
 
 /* ── checklist-scoped update ───────────────────────────────────── */
 
-function mapSelectedChecklist(
-    state: AppState,
-    fn: (cl: Checklist) => Checklist,
-): AppState {
+function mapSelectedChecklist(state: AppState, fn: (cl: Checklist) => Checklist): AppState {
     const id = state.selectedChecklistId;
     if (!id) return state;
     return {
@@ -212,10 +201,7 @@ function mapCategories(
     };
 }
 
-function mapSelectedItems(
-    state: AppState,
-    fn: (items: ChecklistItem[]) => ChecklistItem[],
-): AppState {
+function mapSelectedItems(state: AppState, fn: (items: ChecklistItem[]) => ChecklistItem[]): AppState {
     return mapSelectedChecklist(state, (cl) => ({ ...cl, items: fn(cl.items) }));
 }
 
@@ -242,7 +228,7 @@ function reducer(state: AppState, action: Action): AppState {
 
         case "update-item":
             return mapSelectedItems(state, (items) =>
-                updateItem(items, action.itemId, (it) => ({ ...it, ...action.patch } as ChecklistItem)),
+                updateItem(items, action.itemId, (it) => ({ ...it, ...action.patch }) as ChecklistItem),
             );
 
         case "add-item":
@@ -343,13 +329,10 @@ function reducer(state: AppState, action: Action): AppState {
             }));
             for (const db of databases) {
                 for (const cat of Object.keys(db.categories) as Category[]) {
-                    db.categories[cat] = db.categories[cat].filter(
-                        (e) => isHeader(e) || e.id !== action.id,
-                    );
+                    db.categories[cat] = db.categories[cat].filter((e) => isHeader(e) || e.id !== action.id);
                 }
             }
-            const stillSelected =
-                state.selectedChecklistId === action.id ? null : state.selectedChecklistId;
+            const stillSelected = state.selectedChecklistId === action.id ? null : state.selectedChecklistId;
             return { ...state, databases, selectedChecklistId: stillSelected };
         }
 
@@ -372,9 +355,7 @@ function reducer(state: AppState, action: Action): AppState {
         case "rename-database":
             return {
                 ...state,
-                databases: state.databases.map((db) =>
-                    db.id === action.dbId ? { ...db, name: action.name } : db,
-                ),
+                databases: state.databases.map((db) => (db.id === action.dbId ? { ...db, name: action.name } : db)),
             };
 
         case "add-section-header": {
@@ -405,9 +386,7 @@ function reducer(state: AppState, action: Action): AppState {
                               categories: {
                                   ...db.categories,
                                   [action.category]: db.categories[action.category].map((e) =>
-                                      isHeader(e) && e.id === action.id
-                                          ? { ...e, name: action.name }
-                                          : e,
+                                      isHeader(e) && e.id === action.id ? { ...e, name: action.name } : e,
                                   ),
                               },
                           }
@@ -459,10 +438,7 @@ function reducer(state: AppState, action: Action): AppState {
                               ...db,
                               categories: {
                                   ...db.categories,
-                                  [action.category]: [
-                                      ...db.categories[action.category],
-                                      action.checklist,
-                                  ],
+                                  [action.category]: [...db.categories[action.category], action.checklist],
                               },
                           }
                         : db,

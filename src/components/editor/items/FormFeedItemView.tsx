@@ -1,8 +1,9 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+
 import type { FormFeedItem } from "../../../checklist";
-import { useDispatch } from "../../../state";
 import { ITEM_TYPE_META } from "../../../itemUtils";
+import { useDispatch } from "../../../state";
 
 export function FormFeedItemView({ item, number }: { item: FormFeedItem; number: string }) {
     const dispatch = useDispatch();
@@ -14,7 +15,13 @@ export function FormFeedItemView({ item, number }: { item: FormFeedItem; number:
         <div
             ref={setNodeRef}
             className={`vH-ff${isDragging ? " dragging" : ""}`}
-            style={{ "--ic": ITEM_TYPE_META["form-feed"].cssVar, transform: CSS.Transform.toString(transform), transition } as React.CSSProperties}
+            style={
+                {
+                    "--ic": ITEM_TYPE_META["form-feed"].cssVar,
+                    transform: CSS.Transform.toString(transform),
+                    transition,
+                } as React.CSSProperties
+            }
         >
             <span className="vH-num">{number}</span>
             <span className="vH-drag" {...attributes} {...listeners}>

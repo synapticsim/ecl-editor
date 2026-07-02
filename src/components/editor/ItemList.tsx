@@ -1,10 +1,11 @@
-import { Fragment } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { Fragment } from "react";
+
 import type { ChecklistItem } from "../../checklist";
-import { ROOT_DROP_ID, branchDropId, type ListLoc } from "../../state";
-import { ChecklistItemView } from "./ChecklistItemView";
+import { branchDropId, type ListLoc, ROOT_DROP_ID } from "../../state";
 import { AddItemControl } from "./AddItemControl";
+import { ChecklistItemView } from "./ChecklistItemView";
 
 interface Props {
     items: ChecklistItem[];

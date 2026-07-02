@@ -1,10 +1,11 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+
 import type { Checklist } from "../../checklist";
+import { Icon } from "../../icons";
 import { countItems } from "../../itemUtils";
 import { useDispatch } from "../../state";
 import { useConfirm } from "../common/confirmContext";
-import { Icon } from "../../icons";
 
 interface Props {
     checklist: Checklist;

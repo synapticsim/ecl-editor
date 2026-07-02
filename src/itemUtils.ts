@@ -43,10 +43,7 @@ export function maxDepth(items: ChecklistItem[], depth = 1): number {
     return max;
 }
 
-export const ITEM_TYPE_META: Record<
-    ChecklistItem["type"],
-    { label: string; cssVar: string; toolbar: string }
-> = {
+export const ITEM_TYPE_META: Record<ChecklistItem["type"], { label: string; cssVar: string; toolbar: string }> = {
     action: { label: "ACTION", cssVar: "var(--t-action)", toolbar: "Action" },
     sensed: { label: "SENSED", cssVar: "var(--t-sensed)", toolbar: "Sensed" },
     conditional: { label: "IF", cssVar: "var(--t-conditional)", toolbar: "Conditional" },

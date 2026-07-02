@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+
 import { Icon } from "../../icons";
 import "./Combobox.css";
 
@@ -144,7 +145,6 @@ export function Combobox({ value, options, onChange, placeholder = "select…" }
                                         </span>
                                     )}
                                 </li>
-
                             ))
                         )}
                     </ul>,
