@@ -21,7 +21,7 @@
     --fg-1: #ebe9f5; /* primary */
     --fg-2: #a4a3b5; /* secondary */
     --fg-3: #6e6d80; /* tertiary */
-    --fg-4: #4a4958; /* faint */
+    --fg-4: #5f5e71; /* faint */
 
     /* item-type semantic colors — "mono + accent" palette */
     --t-action: #c4c3d5;
@@ -35,9 +35,9 @@
     --row-h: 28px;
     --row-pad: 10px;
     --gap: 6px;
-    --fs-ui: 12px;
-    --fs-mono: 12px;
-    --fs-h: 11px;
+    --fs-ui: 13px;
+    --fs-mono: 13px;
+    --fs-h: 12px;
 
     /* fonts */
     --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;

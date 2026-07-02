@@ -5,7 +5,7 @@
 }
 .m-breadcrumb {
     font-family: var(--font-mono);
-    font-size: 10.5px;
+    font-size: 11.5px;
     color: var(--fg-3);
     margin-bottom: 6px;
 }
@@ -22,7 +22,7 @@
     gap: 12px;
 }
 .m-title {
-    font-size: 19px;
+    font-size: 20px;
     font-weight: 600;
     letter-spacing: -0.01em;
     color: var(--fg-1);
@@ -33,7 +33,7 @@
     gap: 10px;
     align-items: center;
     color: var(--fg-3);
-    font-size: 11px;
+    font-size: 12px;
     font-family: var(--font-mono);
 }
 .m-meta .badge {
@@ -42,6 +42,18 @@
     background: var(--bg-2);
     color: var(--fg-2);
     border: 1px solid var(--bd-1);
+}
+
+.m-cas {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+}
+.m-cas-label {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: var(--fg-4);
 }
 
 .m-body {
@@ -60,7 +72,7 @@
 }
 .m-empty {
     color: var(--fg-3);
-    font-size: 13px;
+    font-size: 14px;
     padding: 40px;
     text-align: center;
 }
@@ -112,7 +124,7 @@
     padding: 5px 10px 5px 6px;
     border-radius: 5px;
     color: var(--fg-3);
-    font-size: 11.5px;
+    font-size: 12.5px;
     border: 1px dashed transparent;
 }
 .add-ctl-end .add-ctl-trigger:hover {
@@ -157,7 +169,7 @@
     height: 24px;
     padding: 0 9px;
     border-radius: 4px;
-    font-size: 11px;
+    font-size: 12px;
     color: var(--fg-2);
     border: 1px solid var(--bd-1);
 }

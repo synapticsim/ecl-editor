@@ -48,17 +48,6 @@ export function Preview() {
                 <button className="r-tab disabled" title="Live cockpit preview — port from your existing renderer">
                     <span className="glyph">▶</span>
                     <span>Preview</span>
-                    <span
-                        style={{
-                            marginLeft: 6,
-                            fontFamily: "var(--font-sans)",
-                            fontSize: 9,
-                            color: "var(--fg-4)",
-                            textTransform: "uppercase",
-                        }}
-                    >
-                        port
-                    </span>
                 </button>
                 <div className="r-actions">
                     <button className="icon" title="Copy JSON" onClick={copy}>

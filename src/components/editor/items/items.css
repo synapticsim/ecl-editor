@@ -27,7 +27,7 @@
 
 .vH-num {
     font-family: var(--font-mono);
-    font-size: 10.5px;
+    font-size: 11.5px;
     color: var(--fg-4);
     text-align: right;
     padding-top: 3px;
@@ -35,7 +35,7 @@
 }
 .vH-drag {
     color: var(--fg-4);
-    font-size: 11px;
+    font-size: 12px;
     text-align: center;
     padding-top: 3px;
     opacity: 0;
@@ -79,7 +79,7 @@
     column-gap: 8px;
     padding-right: 18px;
     font-family: var(--font-mono);
-    font-size: 11.5px;
+    font-size: 12.5px;
 }
 .vH-ch {
     color: var(--fg-1);
@@ -102,7 +102,7 @@
 .vH-meta {
     margin-top: 3px;
     font-family: var(--font-mono);
-    font-size: 10.5px;
+    font-size: 11.5px;
     display: flex;
     gap: 4px;
     align-items: baseline;
@@ -117,10 +117,30 @@
 .vH-meta-v {
     color: var(--sensed);
 }
+.vH-flag {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    padding: 1px 6px;
+    border-radius: 3px;
+    color: var(--fg-3);
+    border: 1px solid var(--bd-2);
+    background: transparent;
+}
+.vH-flag:hover {
+    border-color: var(--bd-2);
+    color: var(--fg-2);
+}
+.vH-flag.active {
+    color: var(--sensed);
+    border-color: color-mix(in oklab, var(--sensed) 45%, transparent);
+    background: color-mix(in oklab, var(--sensed) 16%, transparent);
+}
 .vH-ext {
     margin-top: 3px;
     font-family: var(--font-mono);
-    font-size: 10.5px;
+    font-size: 11.5px;
     color: var(--fg-3);
     display: flex;
     gap: 4px;
@@ -132,7 +152,7 @@
 
 .vH-text {
     font-family: var(--font-mono);
-    font-size: 11.5px;
+    font-size: 12.5px;
     color: var(--fg-1);
     font-weight: 500;
 }
@@ -156,7 +176,7 @@
     gap: 10px;
     color: var(--fg-1);
     font-family: var(--font-sans);
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 500;
     padding-left: 4px;
     min-width: 0;
@@ -164,7 +184,7 @@
 }
 .vH-block-pill {
     font-family: var(--font-mono);
-    font-size: 9.5px;
+    font-size: 10.5px;
     font-weight: 700;
     letter-spacing: 0.08em;
     padding: 2px 7px;
@@ -185,11 +205,11 @@
     gap: 10px;
     padding: 6px 12px 4px 58px;
     color: var(--ic);
-    font-size: 11px;
+    font-size: 12px;
 }
 .vH-branch-pill {
     font-family: var(--font-mono);
-    font-size: 9.5px;
+    font-size: 10.5px;
     font-weight: 600;
     letter-spacing: 0.06em;
     padding: 1px 6px;
@@ -202,11 +222,11 @@
     color: var(--fg-1);
     font-family: var(--font-sans);
     font-weight: 500;
-    font-size: 12px;
+    font-size: 13px;
 }
 .vH-branch-del {
     color: var(--fg-4);
-    font-size: 12px;
+    font-size: 13px;
     padding: 0 4px;
     border-radius: 3px;
     opacity: 0;
@@ -239,7 +259,7 @@
     border: 1px dashed var(--bd-1);
     border-radius: 4px;
     color: var(--fg-4);
-    font-size: 10.5px;
+    font-size: 11.5px;
     font-family: var(--font-mono);
 }
 .vH-branch-add:hover {
@@ -268,7 +288,7 @@
 }
 .vH-ff-label {
     font-family: var(--font-mono);
-    font-size: 9.5px;
+    font-size: 10.5px;
     font-weight: 600;
     letter-spacing: 0.12em;
     text-transform: uppercase;
@@ -281,7 +301,7 @@
     right: 4px;
     opacity: 0;
     color: var(--fg-4);
-    font-size: 14px;
+    font-size: 15px;
     line-height: 1;
     width: 18px;
     height: 18px;
@@ -325,7 +345,7 @@
 .overlay .vH-action,
 .overlay .vH-text {
     font-family: var(--font-mono);
-    font-size: 11.5px;
+    font-size: 12.5px;
 }
 .overlay .vH-rs {
     color: var(--ic);

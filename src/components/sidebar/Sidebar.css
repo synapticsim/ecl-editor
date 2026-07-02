@@ -15,7 +15,7 @@
 }
 .l-search input {
     flex: 1;
-    font-size: 12px;
+    font-size: 13px;
 }
 
 .l-body {
@@ -50,7 +50,7 @@
     cursor: pointer;
     color: var(--fg-2);
     gap: 6px;
-    font-size: 12px;
+    font-size: 13px;
 }
 .tree-row:hover {
     background: var(--bg-2);
@@ -59,7 +59,7 @@
 .tree-row .chev {
     width: 12px;
     color: var(--fg-4);
-    font-size: 9px;
+    font-size: 10px;
     transition: transform 0.12s;
     display: inline-flex;
 }
@@ -72,11 +72,6 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-}
-.tree-row .meta {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    color: var(--fg-4);
 }
 
 .tree-db > .tree-row {
@@ -118,7 +113,7 @@
 /* category group */
 .tree-cat {
     padding: 8px 8px 2px 14px;
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 600;
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -135,7 +130,7 @@
 .tree-cat .add {
     margin-left: auto;
     color: var(--fg-4);
-    font-size: 14px;
+    font-size: 15px;
     line-height: 1;
     padding: 0 4px;
     border-radius: 3px;
@@ -149,7 +144,7 @@
     margin: 4px 4px 1px 18px;
     padding: 3px 6px 3px 10px;
     color: var(--fg-3);
-    font-size: 10.5px;
+    font-size: 11.5px;
     font-weight: 600;
     letter-spacing: 0.02em;
     border-left: 1px solid var(--bd-1);
@@ -161,7 +156,7 @@
     content: "§";
     color: var(--fg-4);
     font-family: var(--font-mono);
-    font-size: 11px;
+    font-size: 12px;
 }
 .tree-section-header .sh-name {
     flex: 1;
@@ -179,7 +174,7 @@
     border-left: 1px solid var(--bd-1);
     border-radius: 0 5px 5px 0;
     color: var(--fg-2);
-    font-size: 12px;
+    font-size: 13px;
     cursor: pointer;
     gap: 8px;
     position: relative;
@@ -195,7 +190,7 @@
     width: 10px;
     margin-left: -8px;
     color: var(--fg-4);
-    font-size: 11px;
+    font-size: 12px;
     letter-spacing: -1px;
     text-align: center;
     cursor: grab;
@@ -219,7 +214,7 @@
 }
 .tree-leaf .leaf-meta {
     font-family: var(--font-mono);
-    font-size: 10px;
+    font-size: 11px;
     color: var(--fg-4);
 }
 .tree-leaf.selected {
@@ -253,7 +248,7 @@
     flex: 1;
     padding: 5px 8px;
     border-radius: 5px;
-    font-size: 11.5px;
+    font-size: 12.5px;
     color: var(--fg-2);
     display: flex;
     align-items: center;

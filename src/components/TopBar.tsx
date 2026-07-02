@@ -1,9 +1,9 @@
-import { useRef } from "react";
 import "./TopBar.css";
 
 import { CATEGORY_LABELS, isHeader } from "../checklist";
-import { parseChecklist, serializeChecklist } from "../schemas";
-import { useDispatch, useSaveStatus, useSelectedChecklist } from "../state";
+import { Icon } from "../icons";
+import { serializeChecklist } from "../schemas";
+import { useSaveStatus, useSelectedChecklist } from "../state";
 
 function sectionFor(db: ReturnType<typeof useSelectedChecklist>["db"], checklistId: string): string | null {
     if (!db) return null;
@@ -22,9 +22,7 @@ function sectionFor(db: ReturnType<typeof useSelectedChecklist>["db"], checklist
 
 export function TopBar() {
     const { checklist, db } = useSelectedChecklist();
-    const dispatch = useDispatch();
     const status = useSaveStatus();
-    const fileRef = useRef<HTMLInputElement>(null);
 
     const section = checklist ? sectionFor(db, checklist.id) : null;
 
@@ -37,31 +35,6 @@ export function TopBar() {
         a.download = `${checklist.name.replace(/\s+/g, "_").toLowerCase()}.json`;
         a.click();
         URL.revokeObjectURL(url);
-    }
-
-    function handleImportFile(e: React.ChangeEvent<HTMLInputElement>) {
-        const file = e.target.files?.[0];
-        e.target.value = "";
-        if (!file || !db) return;
-        file.text().then((text) => {
-            const result = parseChecklist(text);
-            if (!result.ok) {
-                alert(`Import failed:\n\n${result.error}`);
-                return;
-            }
-            dispatch({
-                type: "import-checklist",
-                dbId: db.id,
-                category: result.checklist.category,
-                checklist: result.checklist,
-            });
-        });
-    }
-
-    function handleValidate() {
-        if (!checklist) return;
-        const result = parseChecklist(serializeChecklist(checklist));
-        alert(result.ok ? "Checklist is valid against the schema." : `Validation error:\n\n${result.error}`);
     }
 
     return (
@@ -94,18 +67,10 @@ export function TopBar() {
                 {status === "saving" ? "saving changes" : "changes automatically saved"}
             </span>
             <div className="spacer" />
-            <div className="menu">
-                <button onClick={handleValidate}>Validate</button>
-                <button onClick={handleExport}>Export</button>
-                <button onClick={() => fileRef.current?.click()}>Import</button>
-            </div>
-            <input
-                ref={fileRef}
-                type="file"
-                accept="application/json,.json"
-                style={{ display: "none" }}
-                onChange={handleImportFile}
-            />
+            <button className="btn-export" onClick={handleExport} disabled={!checklist}>
+                <Icon name="download" size={11} />
+                Export
+            </button>
         </header>
     );
 }

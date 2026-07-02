@@ -10,6 +10,7 @@ import type {
     SectionHeader,
 } from "./checklist";
 import { isHeader } from "./checklist";
+import type { CasMessage } from "./lib/cas";
 import { seedDatabases } from "./mockData";
 import { uid } from "./schemas";
 
@@ -38,6 +39,7 @@ export type Action =
     | { type: "hydrate"; state: AppState }
     | { type: "select"; id: string }
     | { type: "set-checklist-name"; id: string; name: string }
+    | { type: "set-checklist-cas"; id: string; cas: CasMessage | undefined }
     | { type: "update-item"; itemId: string; patch: Partial<ChecklistItem> }
     | { type: "add-item"; loc: ListLoc; itemType: ItemType; index?: number }
     | { type: "delete-item"; itemId: string }
@@ -222,6 +224,17 @@ function reducer(state: AppState, action: Action): AppState {
                     ...db,
                     categories: mapCategories(db.categories, (e) =>
                         !isHeader(e) && e.id === action.id ? { ...e, name: action.name } : e,
+                    ),
+                })),
+            };
+
+        case "set-checklist-cas":
+            return {
+                ...state,
+                databases: state.databases.map((db) => ({
+                    ...db,
+                    categories: mapCategories(db.categories, (e) =>
+                        !isHeader(e) && e.id === action.id ? { ...e, cas: action.cas } : e,
                     ),
                 })),
             };

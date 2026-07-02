@@ -29,20 +29,6 @@ export function countItems(items: ChecklistItem[]): number {
     return n;
 }
 
-export function maxDepth(items: ChecklistItem[], depth = 1): number {
-    let max = items.length ? depth : 0;
-    for (const it of items) {
-        if (it.type === "conditional") {
-            max = Math.max(max, maxDepth(it.paths.YES, depth + 1), maxDepth(it.paths.NO, depth + 1));
-        } else if (it.type === "multi-select") {
-            for (const list of Object.values(it.paths)) {
-                max = Math.max(max, maxDepth(list, depth + 1));
-            }
-        }
-    }
-    return max;
-}
-
 export const ITEM_TYPE_META: Record<ChecklistItem["type"], { label: string; cssVar: string; toolbar: string }> = {
     action: { label: "ACTION", cssVar: "var(--t-action)", toolbar: "Action" },
     sensed: { label: "SENSED", cssVar: "var(--t-sensed)", toolbar: "Sensed" },

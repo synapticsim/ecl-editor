@@ -45,7 +45,6 @@ export function DatabaseNode({ db, defaultOpen, selectedId, query, onSelect }: P
                 <button className="tree-del" title="Delete database" onClick={handleDelete}>
                     <Icon name="trash" size={11} />
                 </button>
-                <span className="meta mono">{db.version}</span>
             </div>
 
             {open && (

@@ -1,6 +1,6 @@
 import type { SensedItem } from "../../../checklist";
-import { ECL_VARIABLE_NAMES } from "../../../checklist";
 import { ITEM_TYPE_META } from "../../../itemUtils";
+import { ECL_VARIABLE_NAMES } from "../../../lib/vars";
 import { useDispatch } from "../../../state";
 import { Combobox } from "../../common/Combobox";
 import { EditableText } from "../../common/EditableText";
@@ -40,8 +40,6 @@ export function SensedItemView({ item, number }: { item: SensedItem; number: str
                 </span>
             </div>
             <div className="vH-meta" style={{ "--sensed": ITEM_TYPE_META.sensed.cssVar } as React.CSSProperties}>
-                <span className="vH-meta-k">sensed_var</span>
-                <span className="vH-meta-eq">=</span>
                 <span className="vH-meta-v">
                     <Combobox
                         value={item.sensed}
@@ -50,6 +48,20 @@ export function SensedItemView({ item, number }: { item: SensedItem; number: str
                         placeholder="select variable…"
                     />
                 </span>
+                <button
+                    className={`vH-flag${item.inverted ? " active" : ""}`}
+                    title="Invert the sensed condition"
+                    onClick={() => update({ inverted: !item.inverted })}
+                >
+                    INVERT
+                </button>
+                <button
+                    className={`vH-flag${item.latchable ? " active" : ""}`}
+                    title="Latch once sensed"
+                    onClick={() => update({ latchable: !item.latchable })}
+                >
+                    LATCH
+                </button>
             </div>
         </RowFrame>
     );

@@ -1,7 +1,8 @@
 import type { Checklist, ChecklistDatabase } from "../../checklist";
 import { CATEGORY_LABELS, isHeader } from "../../checklist";
-import { countItems, maxDepth } from "../../itemUtils";
+import { countItems } from "../../itemUtils";
 import { useDispatch } from "../../state";
+import { CasCombobox } from "../common/CasCombobox";
 import { EditableText } from "../common/EditableText";
 
 function sectionFor(db: ChecklistDatabase | null, checklistId: string): string | null {
@@ -20,7 +21,6 @@ export function EditorHeader({ checklist, db }: { checklist: Checklist; db: Chec
     const dispatch = useDispatch();
     const section = sectionFor(db, checklist.id);
     const total = countItems(checklist.items);
-    const depth = maxDepth(checklist.items);
 
     return (
         <div className="m-head">
@@ -47,9 +47,17 @@ export function EditorHeader({ checklist, db }: { checklist: Checklist; db: Chec
                 </div>
                 <div className="m-meta">
                     <span className="badge">{total} items</span>
-                    <span>depth {depth}</span>
                 </div>
             </div>
+            {(checklist.category === "non-normal" || checklist.category === "procedure") && (
+                <div className="m-cas">
+                    <span className="m-cas-label">CAS message</span>
+                    <CasCombobox
+                        value={checklist.cas}
+                        onChange={(cas) => dispatch({ type: "set-checklist-cas", id: checklist.id, cas })}
+                    />
+                </div>
+            )}
         </div>
     );
 }
