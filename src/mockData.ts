@@ -5,7 +5,7 @@ export function seedDatabases(): ChecklistDatabase[] {
         {
             id: "db-1",
             name: "Untitled Database",
-            categories: { normal: [], "non-normal": [], procedure: [] },
+            categories: { normal: [], non_normal: [], procedure: [] },
         },
     ];
 }

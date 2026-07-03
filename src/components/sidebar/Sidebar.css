@@ -149,7 +149,7 @@
     letter-spacing: 0.02em;
     border-left: 1px solid var(--bd-1);
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 6px;
 }
 .tree-section-header::before {
@@ -157,12 +157,26 @@
     color: var(--fg-4);
     font-family: var(--font-mono);
     font-size: 12px;
+    line-height: 1.5;
 }
 .tree-section-header .sh-name {
     flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    min-width: 0;
+}
+.tree-section-header .sh-add,
+.tree-section-header .tree-del {
+    margin-top: 1px;
+}
+.tree-section-header .sh-add {
+    color: var(--fg-4);
+    font-size: 14px;
+    line-height: 1;
+    padding: 0 4px;
+    border-radius: 3px;
+}
+.tree-section-header .sh-add:hover {
+    background: var(--bg-3);
+    color: var(--fg-2);
 }
 
 .tree-leaf {
@@ -261,4 +275,47 @@
 }
 .l-foot button .plus {
     color: var(--accent);
+}
+.l-foot button:disabled,
+.import-menu button:disabled {
+    opacity: 0.4;
+    pointer-events: none;
+}
+
+/* import control */
+.import-ctl {
+    position: relative;
+    flex: 1;
+    display: flex;
+}
+.import-ctl > button {
+    flex: 1;
+}
+.import-menu {
+    position: absolute;
+    bottom: calc(100% + 4px);
+    right: 0;
+    min-width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 4px;
+    border: 1px solid var(--bd-2);
+    border-radius: 6px;
+    background: var(--bg-2);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    z-index: 10;
+}
+.import-menu button {
+    display: flex;
+    justify-content: flex-start;
+    white-space: nowrap;
+    padding: 5px 8px;
+    border-radius: 4px;
+    font-size: 12.5px;
+    color: var(--fg-2);
+}
+.import-menu button:hover {
+    background: var(--bg-3);
+    color: var(--fg-1);
 }

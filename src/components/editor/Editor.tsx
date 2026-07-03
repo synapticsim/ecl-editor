@@ -45,7 +45,7 @@ function buildContainerMap(items: ChecklistItem[]): Record<string, string[]> {
 }
 
 export function Editor() {
-    const { checklist, db } = useSelectedChecklist();
+    const { checklist, db, category, section } = useSelectedChecklist();
     const dispatch = useDispatch();
     const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
     const [activeId, setActiveId] = useState<string | null>(null);
@@ -103,7 +103,7 @@ export function Editor() {
 
     return (
         <main className="panel panel-m">
-            <EditorHeader checklist={checklist} db={db} />
+            <EditorHeader checklist={checklist} db={db} category={category} section={section} />
             <div className="m-body">
                 <DndContext
                     sensors={sensors}

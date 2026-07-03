@@ -1,56 +1,36 @@
-import { closestCenter, DndContext, type DragEndEvent, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
-import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
+import { useDroppable } from "@dnd-kit/core";
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 
-import type { Category, CategoryEntry } from "../../checklist";
-import { isHeader } from "../../checklist";
-import { Icon } from "../../icons";
-import { useDispatch } from "../../state";
-import { EditableText } from "../common/EditableText";
+import type { Checklist } from "../../checklist";
+import { NORMAL_DROP_ID, useDispatch } from "../../state";
 import { ChecklistLeaf } from "./ChecklistLeaf";
 
 interface Props {
     dbId: string;
     label: string;
-    category: Category;
-    entries: CategoryEntry[];
-    allowHeaders: boolean;
+    checklists: Checklist[];
     selectedId: string | null;
     query: string;
     onSelect: (id: string) => void;
 }
 
-export function CategoryGroup({ dbId, label, category, entries, allowHeaders, selectedId, query, onSelect }: Props) {
+/** Flat checklist list for the "normal" category — the only one without sections.
+ *  Drag-and-drop is owned by the parent DatabaseNode (shared across categories);
+ *  this only registers the sortable/droppable containers. */
+export function CategoryGroup({ dbId, label, checklists, selectedId, query, onSelect }: Props) {
     const dispatch = useDispatch();
-    const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
-    const checklistCount = entries.filter((e) => !isHeader(e)).length;
-
-    function handleDragEnd(e: DragEndEvent) {
-        const { active, over } = e;
-        if (over && active.id !== over.id) {
-            dispatch({
-                type: "reorder-category",
-                dbId,
-                category,
-                activeId: String(active.id),
-                overId: String(over.id),
-            });
-        }
-    }
+    const { setNodeRef } = useDroppable({ id: NORMAL_DROP_ID });
 
     const q = query.trim().toLowerCase();
-    const filtered = q ? entries.filter((e) => !isHeader(e) && e.name.toLowerCase().includes(q)) : entries;
+    const filtered = q ? checklists.filter((cl) => cl.name.toLowerCase().includes(q)) : checklists;
 
-    function renderEntry(entry: CategoryEntry) {
-        if (isHeader(entry)) {
-            return <SectionHeaderRow key={entry.id} dbId={dbId} category={category} id={entry.id} name={entry.name} />;
-        }
+    function renderLeaf(cl: Checklist) {
         return (
             <ChecklistLeaf
-                key={entry.id}
-                checklist={entry}
-                selected={entry.id === selectedId}
-                inSection={allowHeaders}
+                key={cl.id}
+                checklist={cl}
+                selected={cl.id === selectedId}
+                inSection={false}
                 onSelect={onSelect}
             />
         );
@@ -60,77 +40,24 @@ export function CategoryGroup({ dbId, label, category, entries, allowHeaders, se
         <>
             <div className="tree-cat">
                 <span>{label}</span>
-                <span className="count">{checklistCount}</span>
-                {allowHeaders && (
-                    <button
-                        className="add"
-                        title={`Add section to ${label}`}
-                        onClick={() => dispatch({ type: "add-section-header", dbId, category })}
-                    >
-                        §
-                    </button>
-                )}
+                <span className="count">{checklists.length}</span>
                 <button
                     className="add"
                     title={`Add checklist to ${label}`}
-                    onClick={() => dispatch({ type: "add-checklist", dbId, category })}
+                    onClick={() => dispatch({ type: "add-checklist", dbId, category: "normal" })}
                 >
                     +
                 </button>
             </div>
             {q ? (
-                filtered.map(renderEntry)
+                filtered.map(renderLeaf)
             ) : (
-                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                    <SortableContext items={entries.map((e) => e.id)} strategy={verticalListSortingStrategy}>
-                        {entries.map(renderEntry)}
+                <div ref={setNodeRef}>
+                    <SortableContext items={checklists.map((cl) => cl.id)} strategy={verticalListSortingStrategy}>
+                        {checklists.map(renderLeaf)}
                     </SortableContext>
-                </DndContext>
+                </div>
             )}
         </>
-    );
-}
-
-function SectionHeaderRow({
-    dbId,
-    category,
-    id,
-    name,
-}: {
-    dbId: string;
-    category: Category;
-    id: string;
-    name: string;
-}) {
-    const dispatch = useDispatch();
-    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
-
-    return (
-        <div
-            ref={setNodeRef}
-            className={`tree-section-header${isDragging ? " dragging" : ""}`}
-            style={{ transform: CSS.Transform.toString(transform), transition }}
-            {...attributes}
-            {...listeners}
-        >
-            <span className="sh-name" onPointerDown={(e) => e.stopPropagation()}>
-                <EditableText
-                    value={name}
-                    onCommit={(next) => dispatch({ type: "rename-header", dbId, category, id, name: next })}
-                    autoSize
-                />
-            </span>
-            <button
-                className="tree-del"
-                title="Delete section"
-                onPointerDown={(e) => e.stopPropagation()}
-                onClick={(e) => {
-                    e.stopPropagation();
-                    dispatch({ type: "delete-header", dbId, category, id });
-                }}
-            >
-                <Icon name="trash" size={11} />
-            </button>
-        </div>
     );
 }

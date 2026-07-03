@@ -1,18 +1,12 @@
 import { createContext, type Dispatch, useContext } from "react";
 
-import type {
-    Category,
-    CategoryEntry,
-    Checklist,
-    ChecklistDatabase,
-    ChecklistItem,
-    ItemType,
-    SectionHeader,
-} from "./checklist";
-import { isHeader } from "./checklist";
+import type { Category, Checklist, ChecklistDatabase, ChecklistItem, ItemType, Section } from "./checklist";
 import type { CasMessage } from "./lib/cas";
 import { seedDatabases } from "./mockData";
 import { uid } from "./schemas";
+
+/** The two categories whose checklists are grouped into named sections. */
+export type SectionedCategory = "non_normal" | "procedure";
 
 /* ── list location within the selected checklist ──────────────── */
 export type ListLoc = { kind: "root" } | { kind: "branch"; parentId: string; key: string };
@@ -28,6 +22,18 @@ export function parseDropId(id: string): ListLoc | null {
     return null;
 }
 
+/* ── sidebar checklist-tree drop targets ─────────────────────────
+ * Distinct from checklist ids so a drop onto an empty (or trailing) list can
+ * still resolve to a container even when there's nothing to drop "onto". */
+export const NORMAL_DROP_ID = "checklist-drop:normal";
+export function sectionDropId(sectionId: string): string {
+    return `checklist-drop:section:${sectionId}`;
+}
+export function parseSectionDropId(id: string): string | null {
+    const m = id.match(/^checklist-drop:section:(.+)$/);
+    return m ? m[1] : null;
+}
+
 export interface AppState {
     databases: ChecklistDatabase[];
     selectedChecklistId: string | null;
@@ -40,6 +46,7 @@ export type Action =
     | { type: "select"; id: string }
     | { type: "set-checklist-name"; id: string; name: string }
     | { type: "set-checklist-cas"; id: string; cas: CasMessage | undefined }
+    | { type: "set-checklist-phase"; id: string; phase: Checklist["phase"] }
     | { type: "update-item"; itemId: string; patch: Partial<ChecklistItem> }
     | { type: "add-item"; loc: ListLoc; itemType: ItemType; index?: number }
     | { type: "delete-item"; itemId: string }
@@ -48,15 +55,25 @@ export type Action =
     | { type: "add-branch"; itemId: string }
     | { type: "rename-branch"; itemId: string; oldKey: string; newKey: string }
     | { type: "delete-branch"; itemId: string; key: string }
-    | { type: "add-checklist"; dbId: string; category: Category }
+    | { type: "copy-branch"; itemId: string; fromKey: string }
+    | { type: "add-checklist"; dbId: string; category: Category; sectionId?: string }
     | { type: "delete-checklist"; id: string }
     | { type: "delete-database"; dbId: string }
     | { type: "rename-database"; dbId: string; name: string }
-    | { type: "add-section-header"; dbId: string; category: Category }
-    | { type: "rename-header"; dbId: string; category: Category; id: string; name: string }
-    | { type: "delete-header"; dbId: string; category: Category; id: string }
-    | { type: "reorder-category"; dbId: string; category: Category; activeId: string; overId: string }
-    | { type: "import-checklist"; dbId: string; category: Category; checklist: Checklist };
+    | { type: "add-section"; dbId: string; category: SectionedCategory }
+    | { type: "rename-section"; dbId: string; category: SectionedCategory; id: string; name: string }
+    | { type: "delete-section"; dbId: string; category: SectionedCategory; id: string }
+    | { type: "reorder-sections"; dbId: string; category: SectionedCategory; activeId: string; overId: string }
+    | {
+          type: "move-checklist";
+          dbId: string;
+          checklistId: string;
+          toCategory: Category;
+          toSectionId?: string;
+          overId?: string;
+      }
+    | { type: "import-checklist"; dbId: string; category: Category; sectionId?: string; checklist: Checklist }
+    | { type: "import-database"; database: ChecklistDatabase };
 
 /* ── recursive tree helpers (pure) ─────────────────────────────── */
 
@@ -164,7 +181,7 @@ function makeItem(type: ItemType): ChecklistItem {
         case "action":
             return { type, id, challenge: "NEW ITEM", response: "" };
         case "sensed":
-            return { type, id, challenge: "NEW ITEM", response: "", sensed: "" };
+            return { type, id, challenge: "NEW ITEM", response: "" };
         case "conditional":
             return { type, id, challenge: "New condition?", paths: { YES: [], NO: [] } };
         case "multi-select":
@@ -176,6 +193,136 @@ function makeItem(type: ItemType): ChecklistItem {
     }
 }
 
+/** Deep-clone an item tree with freshly generated ids. */
+function cloneItemTree(it: ChecklistItem): ChecklistItem {
+    const id = uid("i");
+    if (it.type === "conditional") {
+        return { ...it, id, paths: { YES: it.paths.YES.map(cloneItemTree), NO: it.paths.NO.map(cloneItemTree) } };
+    }
+    if (it.type === "multi-select") {
+        return {
+            ...it,
+            id,
+            paths: Object.fromEntries(Object.entries(it.paths).map(([k, v]) => [k, v.map(cloneItemTree)])),
+        };
+    }
+    return { ...it, id };
+}
+
+/* ── database-scoped helpers (normal flat, non_normal & procedure sectioned) ── */
+
+export function allChecklists(db: ChecklistDatabase): Checklist[] {
+    return [
+        ...db.categories.normal,
+        ...db.categories.non_normal.flatMap((sec) => sec.checklists),
+        ...db.categories.procedure.flatMap((sec) => sec.checklists),
+    ];
+}
+
+function sectionsOf(db: ChecklistDatabase, category: SectionedCategory): Section[] {
+    return db.categories[category];
+}
+
+function withSections(db: ChecklistDatabase, category: SectionedCategory, sections: Section[]): ChecklistDatabase {
+    return { ...db, categories: { ...db.categories, [category]: sections } };
+}
+
+/** Locate which category (and, for sectioned categories, which section) holds a checklist. */
+export function locateChecklist(
+    db: ChecklistDatabase,
+    checklistId: string,
+): { category: Category; section: Section | null } | null {
+    if (db.categories.normal.some((cl) => cl.id === checklistId)) return { category: "normal", section: null };
+    for (const category of ["non_normal", "procedure"] as const) {
+        for (const sec of sectionsOf(db, category)) {
+            if (sec.checklists.some((cl) => cl.id === checklistId)) return { category, section: sec };
+        }
+    }
+    return null;
+}
+
+function updateChecklistInDb(db: ChecklistDatabase, id: string, fn: (cl: Checklist) => Checklist): ChecklistDatabase {
+    return {
+        ...db,
+        categories: {
+            normal: db.categories.normal.map((cl) => (cl.id === id ? fn(cl) : cl)),
+            non_normal: db.categories.non_normal.map((sec) => ({
+                ...sec,
+                checklists: sec.checklists.map((cl) => (cl.id === id ? fn(cl) : cl)),
+            })),
+            procedure: db.categories.procedure.map((sec) => ({
+                ...sec,
+                checklists: sec.checklists.map((cl) => (cl.id === id ? fn(cl) : cl)),
+            })),
+        },
+    };
+}
+
+function removeChecklistFromDb(db: ChecklistDatabase, id: string): ChecklistDatabase {
+    return {
+        ...db,
+        categories: {
+            normal: db.categories.normal.filter((cl) => cl.id !== id),
+            non_normal: db.categories.non_normal.map((sec) => ({
+                ...sec,
+                checklists: sec.checklists.filter((cl) => cl.id !== id),
+            })),
+            procedure: db.categories.procedure.map((sec) => ({
+                ...sec,
+                checklists: sec.checklists.filter((cl) => cl.id !== id),
+            })),
+        },
+    };
+}
+
+/** Removes a checklist from wherever it currently lives (normal, or any
+ *  section), returning the updated database and the removed checklist. */
+function removeChecklistAnywhere(
+    db: ChecklistDatabase,
+    id: string,
+): { db: ChecklistDatabase; checklist: Checklist | null } {
+    const normalIdx = db.categories.normal.findIndex((cl) => cl.id === id);
+    if (normalIdx >= 0) {
+        const checklist = db.categories.normal[normalIdx];
+        return { db: removeChecklistFromDb(db, id), checklist };
+    }
+    for (const category of ["non_normal", "procedure"] as const) {
+        for (const sec of sectionsOf(db, category)) {
+            const checklist = sec.checklists.find((cl) => cl.id === id);
+            if (checklist) return { db: removeChecklistFromDb(db, id), checklist };
+        }
+    }
+    return { db, checklist: null };
+}
+
+/** Inserts a checklist into `category` (and, for sectioned categories,
+ *  `sectionId`) at `index`. The index must be resolved against the list
+ *  *before* the checklist was removed from wherever it used to live — for a
+ *  same-container move that's the same array, and re-deriving the index from
+ *  the post-removal list would land one slot early (mirrors `arrayMove`,
+ *  which likewise splices at the pre-removal target index). */
+function insertChecklist(
+    db: ChecklistDatabase,
+    category: Category,
+    sectionId: string | undefined,
+    checklist: Checklist,
+    index: number,
+): ChecklistDatabase {
+    if (category === "normal") {
+        const list = db.categories.normal.slice();
+        list.splice(Math.max(0, Math.min(index, list.length)), 0, checklist);
+        return { ...db, categories: { ...db.categories, normal: list } };
+    }
+    if (!sectionId) return db;
+    const nextSections = sectionsOf(db, category).map((sec) => {
+        if (sec.id !== sectionId) return sec;
+        const list = sec.checklists.slice();
+        list.splice(Math.max(0, Math.min(index, list.length)), 0, checklist);
+        return { ...sec, checklists: list };
+    });
+    return withSections(db, category, nextSections);
+}
+
 /* ── checklist-scoped update ───────────────────────────────────── */
 
 function mapSelectedChecklist(state: AppState, fn: (cl: Checklist) => Checklist): AppState {
@@ -183,23 +330,7 @@ function mapSelectedChecklist(state: AppState, fn: (cl: Checklist) => Checklist)
     if (!id) return state;
     return {
         ...state,
-        databases: state.databases.map((db) => ({
-            ...db,
-            categories: mapCategories(db.categories, (entry) =>
-                !isHeader(entry) && entry.id === id ? fn(entry) : entry,
-            ),
-        })),
-    };
-}
-
-function mapCategories(
-    categories: ChecklistDatabase["categories"],
-    fn: (entry: CategoryEntry) => CategoryEntry,
-): ChecklistDatabase["categories"] {
-    return {
-        normal: categories.normal.map(fn),
-        "non-normal": categories["non-normal"].map(fn),
-        procedure: categories.procedure.map(fn),
+        databases: state.databases.map((db) => updateChecklistInDb(db, id, fn)),
     };
 }
 
@@ -220,23 +351,25 @@ function reducer(state: AppState, action: Action): AppState {
         case "set-checklist-name":
             return {
                 ...state,
-                databases: state.databases.map((db) => ({
-                    ...db,
-                    categories: mapCategories(db.categories, (e) =>
-                        !isHeader(e) && e.id === action.id ? { ...e, name: action.name } : e,
-                    ),
-                })),
+                databases: state.databases.map((db) =>
+                    updateChecklistInDb(db, action.id, (cl) => ({ ...cl, name: action.name })),
+                ),
             };
 
         case "set-checklist-cas":
             return {
                 ...state,
-                databases: state.databases.map((db) => ({
-                    ...db,
-                    categories: mapCategories(db.categories, (e) =>
-                        !isHeader(e) && e.id === action.id ? { ...e, cas: action.cas } : e,
-                    ),
-                })),
+                databases: state.databases.map((db) =>
+                    updateChecklistInDb(db, action.id, (cl) => ({ ...cl, cas: action.cas })),
+                ),
+            };
+
+        case "set-checklist-phase":
+            return {
+                ...state,
+                databases: state.databases.map((db) =>
+                    updateChecklistInDb(db, action.id, (cl) => ({ ...cl, phase: action.phase })),
+                ),
             };
 
         case "update-item":
@@ -310,41 +443,53 @@ function reducer(state: AppState, action: Action): AppState {
                 }),
             );
 
+        case "copy-branch":
+            return mapSelectedItems(state, (items) =>
+                updateItem(items, action.itemId, (it) => {
+                    if (it.type === "conditional") {
+                        if (action.fromKey !== "YES" && action.fromKey !== "NO") return it;
+                        const source = it.paths[action.fromKey];
+                        const otherKey = action.fromKey === "YES" ? "NO" : "YES";
+                        return { ...it, paths: { ...it.paths, [otherKey]: source.map(cloneItemTree) } };
+                    }
+                    if (it.type === "multi-select") {
+                        const source = it.paths[action.fromKey];
+                        if (!source) return it;
+                        const paths: Record<string, ChecklistItem[]> = { ...it.paths };
+                        for (const key of Object.keys(paths)) {
+                            if (key !== action.fromKey) paths[key] = source.map(cloneItemTree);
+                        }
+                        return { ...it, paths };
+                    }
+                    return it;
+                }),
+            );
+
         case "add-checklist": {
-            const cl: Checklist = {
-                kind: "checklist",
-                id: uid("cl"),
-                name: "Untitled Checklist",
-                category: action.category,
-                items: [],
-            };
+            if (action.category !== "normal" && !action.sectionId) return state;
+            const cl: Checklist = { kind: "checklist", id: uid("cl"), name: "Untitled Checklist", items: [] };
             return {
                 ...state,
                 selectedChecklistId: cl.id,
-                databases: state.databases.map((db) =>
-                    db.id === action.dbId
-                        ? {
-                              ...db,
-                              categories: {
-                                  ...db.categories,
-                                  [action.category]: [...db.categories[action.category], cl],
-                              },
-                          }
-                        : db,
-                ),
+                databases: state.databases.map((db) => {
+                    if (db.id !== action.dbId) return db;
+                    if (action.category === "normal") {
+                        return { ...db, categories: { ...db.categories, normal: [...db.categories.normal, cl] } };
+                    }
+                    const category = action.category;
+                    return withSections(
+                        db,
+                        category,
+                        sectionsOf(db, category).map((sec) =>
+                            sec.id === action.sectionId ? { ...sec, checklists: [...sec.checklists, cl] } : sec,
+                        ),
+                    );
+                }),
             };
         }
 
         case "delete-checklist": {
-            const databases = state.databases.map((db) => ({
-                ...db,
-                categories: mapCategories(db.categories, (e) => e) as ChecklistDatabase["categories"],
-            }));
-            for (const db of databases) {
-                for (const cat of Object.keys(db.categories) as Category[]) {
-                    db.categories[cat] = db.categories[cat].filter((e) => isHeader(e) || e.id !== action.id);
-                }
-            }
+            const databases = state.databases.map((db) => removeChecklistFromDb(db, action.id));
             const stillSelected = state.selectedChecklistId === action.id ? null : state.selectedChecklistId;
             return { ...state, databases, selectedChecklistId: stillSelected };
         }
@@ -353,11 +498,7 @@ function reducer(state: AppState, action: Action): AppState {
             const databases = state.databases.filter((db) => db.id !== action.dbId);
             const selectionExists =
                 state.selectedChecklistId != null &&
-                databases.some((db) =>
-                    Object.values(db.categories).some((cat) =>
-                        cat.some((e) => !isHeader(e) && e.id === state.selectedChecklistId),
-                    ),
-                );
+                databases.some((db) => allChecklists(db).some((cl) => cl.id === state.selectedChecklistId));
             return {
                 ...state,
                 databases,
@@ -371,92 +512,139 @@ function reducer(state: AppState, action: Action): AppState {
                 databases: state.databases.map((db) => (db.id === action.dbId ? { ...db, name: action.name } : db)),
             };
 
-        case "add-section-header": {
-            const header: SectionHeader = { kind: "header", id: uid("h"), name: "New Section" };
+        case "add-section": {
+            const section: Section = { kind: "section", id: uid("sec"), name: "New Section", checklists: [] };
             return {
                 ...state,
                 databases: state.databases.map((db) =>
                     db.id === action.dbId
-                        ? {
-                              ...db,
-                              categories: {
-                                  ...db.categories,
-                                  [action.category]: [...db.categories[action.category], header],
-                              },
-                          }
+                        ? withSections(db, action.category, [...sectionsOf(db, action.category), section])
                         : db,
                 ),
             };
         }
 
-        case "rename-header":
+        case "rename-section":
             return {
                 ...state,
                 databases: state.databases.map((db) =>
                     db.id === action.dbId
-                        ? {
-                              ...db,
-                              categories: {
-                                  ...db.categories,
-                                  [action.category]: db.categories[action.category].map((e) =>
-                                      isHeader(e) && e.id === action.id ? { ...e, name: action.name } : e,
-                                  ),
-                              },
-                          }
+                        ? withSections(
+                              db,
+                              action.category,
+                              sectionsOf(db, action.category).map((sec) =>
+                                  sec.id === action.id ? { ...sec, name: action.name } : sec,
+                              ),
+                          )
                         : db,
                 ),
             };
 
-        case "delete-header":
+        case "delete-section": {
+            let clearSelection = false;
+            const databases = state.databases.map((db) => {
+                if (db.id !== action.dbId) return db;
+                const target = sectionsOf(db, action.category).find((sec) => sec.id === action.id);
+                if (target?.checklists.some((cl) => cl.id === state.selectedChecklistId)) clearSelection = true;
+                return withSections(
+                    db,
+                    action.category,
+                    sectionsOf(db, action.category).filter((sec) => sec.id !== action.id),
+                );
+            });
             return {
                 ...state,
-                databases: state.databases.map((db) =>
-                    db.id === action.dbId
-                        ? {
-                              ...db,
-                              categories: {
-                                  ...db.categories,
-                                  [action.category]: db.categories[action.category].filter(
-                                      (e) => !(isHeader(e) && e.id === action.id),
-                                  ),
-                              },
-                          }
-                        : db,
-                ),
+                databases,
+                selectedChecklistId: clearSelection ? null : state.selectedChecklistId,
             };
+        }
 
-        case "reorder-category":
+        case "reorder-sections":
             return {
                 ...state,
                 databases: state.databases.map((db) => {
                     if (db.id !== action.dbId) return db;
-                    const list = db.categories[action.category];
-                    const from = list.findIndex((e) => e.id === action.activeId);
-                    const to = list.findIndex((e) => e.id === action.overId);
+                    const list = sectionsOf(db, action.category);
+                    const from = list.findIndex((s) => s.id === action.activeId);
+                    const to = list.findIndex((s) => s.id === action.overId);
                     if (from < 0 || to < 0 || from === to) return db;
-                    const next = list.slice();
-                    const [moved] = next.splice(from, 1);
-                    next.splice(to, 0, moved);
-                    return { ...db, categories: { ...db.categories, [action.category]: next } };
+                    return withSections(db, action.category, arrayMove(list, from, to));
                 }),
             };
+
+        case "move-checklist": {
+            if (action.toCategory !== "normal" && !action.toSectionId) return state;
+            return {
+                ...state,
+                databases: state.databases.map((db) => {
+                    if (db.id !== action.dbId) return db;
+
+                    // Resolve the drop index against the list *before* removal (see
+                    // insertChecklist's doc comment) — for a same-container move this
+                    // is the same array the checklist is about to be removed from.
+                    const targetList =
+                        action.toCategory === "normal"
+                            ? db.categories.normal
+                            : (sectionsOf(db, action.toCategory).find((s) => s.id === action.toSectionId)?.checklists ??
+                              []);
+                    const rawIndex = action.overId ? targetList.findIndex((cl) => cl.id === action.overId) : -1;
+                    const toIndex = rawIndex < 0 ? targetList.length : rawIndex;
+
+                    const { db: removedDb, checklist } = removeChecklistAnywhere(db, action.checklistId);
+                    if (!checklist) return db;
+                    return insertChecklist(removedDb, action.toCategory, action.toSectionId, checklist, toIndex);
+                }),
+            };
+        }
 
         case "import-checklist":
             return {
                 ...state,
                 selectedChecklistId: action.checklist.id,
-                databases: state.databases.map((db) =>
-                    db.id === action.dbId
-                        ? {
-                              ...db,
-                              categories: {
-                                  ...db.categories,
-                                  [action.category]: [...db.categories[action.category], action.checklist],
-                              },
-                          }
-                        : db,
-                ),
+                databases: state.databases.map((db) => {
+                    if (db.id !== action.dbId) return db;
+                    if (action.category === "normal") {
+                        return {
+                            ...db,
+                            categories: { ...db.categories, normal: [...db.categories.normal, action.checklist] },
+                        };
+                    }
+                    const category = action.category;
+                    let sections = sectionsOf(db, category);
+                    let sectionId = action.sectionId;
+                    if (!sectionId) {
+                        const existing = sections.find((sec) => sec.name === "Imported");
+                        if (existing) {
+                            sectionId = existing.id;
+                        } else {
+                            const section: Section = {
+                                kind: "section",
+                                id: uid("sec"),
+                                name: "Imported",
+                                checklists: [],
+                            };
+                            sections = [...sections, section];
+                            sectionId = section.id;
+                        }
+                    }
+                    return withSections(
+                        db,
+                        category,
+                        sections.map((sec) =>
+                            sec.id === sectionId ? { ...sec, checklists: [...sec.checklists, action.checklist] } : sec,
+                        ),
+                    );
+                }),
             };
+
+        case "import-database": {
+            const first = allChecklists(action.database)[0];
+            return {
+                ...state,
+                databases: [...state.databases, action.database],
+                selectedChecklistId: first ? first.id : state.selectedChecklistId,
+            };
+        }
     }
 }
 
@@ -559,14 +747,11 @@ export function init(): AppState {
     const databases = seedDatabases();
     // Select the first available checklist, if any exist.
     let selected: string | null = null;
-    outer: for (const db of databases) {
-        for (const cat of Object.values(db.categories)) {
-            for (const entry of cat) {
-                if (!isHeader(entry)) {
-                    selected = entry.id;
-                    break outer;
-                }
-            }
+    for (const db of databases) {
+        const first = allChecklists(db)[0];
+        if (first) {
+            selected = first.id;
+            break;
         }
     }
     return { databases, selectedChecklistId: selected };
@@ -584,17 +769,20 @@ export function useDispatch(): Dispatch<Action> {
     return ctx;
 }
 
-export function useSelectedChecklist(): { checklist: Checklist | null; db: ChecklistDatabase | null } {
+export function useSelectedChecklist(): {
+    checklist: Checklist | null;
+    db: ChecklistDatabase | null;
+    category: Category | null;
+    section: Section | null;
+} {
     const state = useAppState();
-    if (!state.selectedChecklistId) return { checklist: null, db: null };
+    if (!state.selectedChecklistId) return { checklist: null, db: null, category: null, section: null };
     for (const db of state.databases) {
-        for (const cat of Object.values(db.categories)) {
-            for (const entry of cat) {
-                if (!isHeader(entry) && entry.id === state.selectedChecklistId) {
-                    return { checklist: entry, db };
-                }
-            }
+        const checklist = allChecklists(db).find((cl) => cl.id === state.selectedChecklistId);
+        if (checklist) {
+            const loc = locateChecklist(db, checklist.id);
+            return { checklist, db, category: loc?.category ?? null, section: loc?.section ?? null };
         }
     }
-    return { checklist: null, db: null };
+    return { checklist: null, db: null, category: null, section: null };
 }

@@ -45,3 +45,40 @@
     flex: 1;
     width: 100%;
 }
+
+/* width-constrained field with explicit-only line breaks (Shift+Enter) — each
+   line stays put and is clipped rather than wrapping to fill the width */
+.edit.pre {
+    display: block;
+    width: 100%;
+    white-space: pre;
+    overflow: hidden;
+    resize: none;
+    line-height: 1.5;
+}
+
+/* clamped read-only preview (multiline fields with clampLines) — shows up to
+   N explicit lines, each individually ellipsized if it overflows the width;
+   swaps to the real textarea when clicked/focused */
+.edit-clamp {
+    border: 1px solid transparent;
+    border-radius: 3px;
+    padding: 1px 4px;
+    margin: -1px -4px;
+    font: inherit;
+    line-height: 1.5;
+    color: inherit;
+    cursor: text;
+}
+.edit-clamp:hover {
+    background: rgba(255, 255, 255, 0.03);
+    box-shadow: 0 0 0 1px var(--bd-2);
+}
+.edit-clamp-line {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+.edit-clamp .edit-ph {
+    color: var(--fg-4);
+}

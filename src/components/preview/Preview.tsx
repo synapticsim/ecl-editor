@@ -2,15 +2,15 @@ import { useState } from "react";
 import "./Preview.css";
 
 import { Icon } from "../../icons";
-import { serializeChecklist } from "../../schemas";
+import { nameResolverFor, serializeChecklist } from "../../schemas";
 import { useSelectedChecklist } from "../../state";
 import { JsonView } from "./JsonView";
 
 export function Preview() {
-    const { checklist } = useSelectedChecklist();
+    const { checklist, db } = useSelectedChecklist();
     const [tab, setTab] = useState<"json" | "preview">("json");
 
-    if (!checklist) {
+    if (!checklist || !db) {
         return (
             <aside className="panel panel-r">
                 <div className="r-tabs">
@@ -23,7 +23,7 @@ export function Preview() {
         );
     }
 
-    const json = serializeChecklist(checklist);
+    const json = serializeChecklist(checklist, nameResolverFor(db));
 
     function copy() {
         navigator.clipboard?.writeText(json);

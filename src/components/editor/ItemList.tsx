@@ -34,7 +34,7 @@ export function ItemList({ items, loc, numberPrefix, startAt }: Props) {
                     </Fragment>
                 ))}
             </SortableContext>
-            <AddItemControl loc={loc} index={items.length} variant={isRoot ? "end" : "between"} />
+            <AddItemControl loc={loc} index={items.length} variant={isRoot || empty ? "end" : "between"} />
         </div>
     );
 }

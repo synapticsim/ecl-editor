@@ -18,14 +18,21 @@
 }
 .m-title-row {
     display: flex;
-    align-items: baseline;
+    align-items: flex-start;
     gap: 12px;
+    min-width: 0;
 }
 .m-title {
     font-size: 20px;
     font-weight: 600;
     letter-spacing: -0.01em;
     color: var(--fg-1);
+    min-width: 0;
+    flex: 1 1 auto;
+}
+.m-title .edit {
+    width: 100%;
+    word-break: break-word;
 }
 .m-meta {
     margin-left: auto;
@@ -102,10 +109,6 @@
 .add-ctl-between.open {
     opacity: 1;
 }
-/* sole control inside an empty branch — keep it discoverable */
-.vH-branch-items.empty .add-ctl-between .add-ctl-trigger {
-    opacity: 1;
-}
 .add-ctl-between .add-ctl-trigger::after {
     content: "";
     flex: 1;
@@ -113,26 +116,26 @@
     background: var(--accent-line);
 }
 
-/* end-of-list: persistent add affordance */
+/* end-of-list: persistent add affordance — styled to match .vH-branch-add ("+ Add option") */
 .add-ctl-end {
     margin-top: 6px;
 }
 .add-ctl-end .add-ctl-trigger {
     display: inline-flex;
     align-items: center;
-    gap: 7px;
-    padding: 5px 10px 5px 6px;
-    border-radius: 5px;
-    color: var(--fg-3);
-    font-size: 12.5px;
-    border: 1px dashed transparent;
+    gap: 6px;
+    padding: 4px 8px;
+    border: 1px dashed var(--bd-1);
+    border-radius: 4px;
+    color: var(--fg-4);
+    font-size: 11.5px;
+    font-family: var(--font-mono);
 }
 .add-ctl-end .add-ctl-trigger:hover {
-    color: var(--accent);
     border-color: var(--accent-line);
-    background: var(--accent-soft);
+    color: var(--accent);
+    background: transparent;
 }
-
 .add-ctl-plus {
     width: 16px;
     height: 16px;
@@ -146,6 +149,12 @@
 }
 .add-ctl-between .add-ctl-plus {
     margin-left: 30px; /* line up under the row number gutter */
+}
+.add-ctl-end .add-ctl-plus {
+    width: auto;
+    height: auto;
+    background: none;
+    color: inherit;
 }
 
 /* expanded type picker */

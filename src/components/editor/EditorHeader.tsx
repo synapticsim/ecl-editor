@@ -1,25 +1,25 @@
-import type { Checklist, ChecklistDatabase } from "../../checklist";
-import { CATEGORY_LABELS, isHeader } from "../../checklist";
+import type { Category, Checklist, ChecklistDatabase, Phase, Section } from "../../checklist";
+import { CATEGORY_LABELS, PHASE_LABELS } from "../../checklist";
 import { countItems } from "../../itemUtils";
 import { useDispatch } from "../../state";
 import { CasCombobox } from "../common/CasCombobox";
+import { Combobox } from "../common/Combobox";
 import { EditableText } from "../common/EditableText";
 
-function sectionFor(db: ChecklistDatabase | null, checklistId: string): string | null {
-    if (!db) return null;
-    for (const cat of Object.values(db.categories)) {
-        let section: string | null = null;
-        for (const entry of cat) {
-            if (isHeader(entry)) section = entry.name;
-            else if (entry.id === checklistId) return section;
-        }
-    }
-    return null;
-}
+const PHASE_OPTIONS = Object.values(PHASE_LABELS);
 
-export function EditorHeader({ checklist, db }: { checklist: Checklist; db: ChecklistDatabase | null }) {
+export function EditorHeader({
+    checklist,
+    db,
+    category,
+    section,
+}: {
+    checklist: Checklist;
+    db: ChecklistDatabase | null;
+    category: Category | null;
+    section: Section | null;
+}) {
     const dispatch = useDispatch();
-    const section = sectionFor(db, checklist.id);
     const total = countItems(checklist.items);
 
     return (
@@ -27,11 +27,11 @@ export function EditorHeader({ checklist, db }: { checklist: Checklist; db: Chec
             <div className="m-breadcrumb mono">
                 <span>{db?.name ?? "—"}</span>
                 <span className="slash">›</span>
-                <span>{CATEGORY_LABELS[checklist.category]}</span>
+                <span>{category && CATEGORY_LABELS[category]}</span>
                 {section && (
                     <>
                         <span className="slash">›</span>
-                        <span>{section}</span>
+                        <span>{section.name}</span>
                     </>
                 )}
                 <span className="slash">›</span>
@@ -42,19 +42,35 @@ export function EditorHeader({ checklist, db }: { checklist: Checklist; db: Chec
                     <EditableText
                         value={checklist.name}
                         onCommit={(name) => dispatch({ type: "set-checklist-name", id: checklist.id, name })}
-                        autoSize
+                        multiline
                     />
                 </div>
                 <div className="m-meta">
                     <span className="badge">{total} items</span>
                 </div>
             </div>
-            {(checklist.category === "non-normal" || checklist.category === "procedure") && (
+            {category === "non_normal" && (
                 <div className="m-cas">
                     <span className="m-cas-label">CAS message</span>
                     <CasCombobox
                         value={checklist.cas}
                         onChange={(cas) => dispatch({ type: "set-checklist-cas", id: checklist.id, cas })}
+                    />
+                </div>
+            )}
+            {category === "normal" && (
+                <div className="m-cas">
+                    <span className="m-cas-label">Phase</span>
+                    <Combobox
+                        value={checklist.phase ? PHASE_LABELS[checklist.phase] : ""}
+                        options={PHASE_OPTIONS}
+                        onChange={(label) => {
+                            const entry = (Object.entries(PHASE_LABELS) as [Phase, string][]).find(
+                                ([, l]) => l === label,
+                            );
+                            dispatch({ type: "set-checklist-phase", id: checklist.id, phase: entry?.[0] });
+                        }}
+                        placeholder="select phase…"
                     />
                 </div>
             )}

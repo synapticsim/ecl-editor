@@ -117,6 +117,16 @@
 .vH-meta-v {
     color: var(--sensed);
 }
+.vH-meta-clear {
+    color: var(--fg-4);
+    font-size: 13px;
+    line-height: 1;
+    padding: 0 4px;
+    border-radius: 3px;
+}
+.vH-meta-clear:hover {
+    color: #f87171;
+}
 .vH-flag {
     font-family: var(--font-mono);
     font-size: 10.5px;
@@ -238,20 +248,36 @@
     opacity: 1;
     color: #f87171;
 }
+.vH-branch-copy {
+    display: inline-flex;
+    align-items: center;
+    color: var(--fg-4);
+    padding: 2px 4px;
+    border-radius: 3px;
+    opacity: 0;
+}
+.vH-branch-label:hover .vH-branch-copy {
+    opacity: 0.6;
+}
+.vH-branch-copy:hover {
+    opacity: 1;
+    color: var(--accent);
+    background: var(--accent-soft);
+}
 
 .vH-branch-items {
     padding-left: 14px;
     min-height: 6px;
 }
-/* empty branch: a slim, text-free drop zone */
+/* empty branch: shows the "Add item" button, which supplies its own dashed box */
 .vH-branch-items.empty {
     margin: 2px 12px 4px 58px;
     min-height: 22px;
-    border: 1px dashed var(--bd-1);
     border-radius: 4px;
 }
 .vH-branch-items.empty.drop-active {
-    border-color: var(--accent-line);
+    outline: 1px dashed var(--accent-line);
+    outline-offset: 2px;
 }
 .vH-branch-add {
     margin: 2px 12px 4px 58px;

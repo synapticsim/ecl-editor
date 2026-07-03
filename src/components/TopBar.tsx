@@ -1,40 +1,54 @@
+import { useEffect, useRef, useState } from "react";
 import "./TopBar.css";
 
-import { CATEGORY_LABELS, isHeader } from "../checklist";
+import { CATEGORY_LABELS } from "../checklist";
 import { Icon } from "../icons";
-import { serializeChecklist } from "../schemas";
+import { nameResolverFor, serializeChecklist, serializePackage } from "../schemas";
 import { useSaveStatus, useSelectedChecklist } from "../state";
 
-function sectionFor(db: ReturnType<typeof useSelectedChecklist>["db"], checklistId: string): string | null {
-    if (!db) return null;
-    for (const cat of Object.values(db.categories)) {
-        let section: string | null = null;
-        for (const entry of cat) {
-            if (isHeader(entry)) {
-                section = entry.name;
-            } else if (entry.id === checklistId) {
-                return section;
-            }
-        }
-    }
-    return null;
+function downloadBlob(text: string, filename: string) {
+    const blob = new Blob([text], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
 }
 
 export function TopBar() {
-    const { checklist, db } = useSelectedChecklist();
+    const { checklist, db, category, section } = useSelectedChecklist();
     const status = useSaveStatus();
+    const [exportOpen, setExportOpen] = useState(false);
+    const exportMenuRef = useRef<HTMLDivElement>(null);
 
-    const section = checklist ? sectionFor(db, checklist.id) : null;
+    useEffect(() => {
+        if (!exportOpen) return;
+        function onDown(e: PointerEvent) {
+            if (exportMenuRef.current && !exportMenuRef.current.contains(e.target as Node)) setExportOpen(false);
+        }
+        function onKey(e: KeyboardEvent) {
+            if (e.key === "Escape") setExportOpen(false);
+        }
+        window.addEventListener("pointerdown", onDown);
+        window.addEventListener("keydown", onKey);
+        return () => {
+            window.removeEventListener("pointerdown", onDown);
+            window.removeEventListener("keydown", onKey);
+        };
+    }, [exportOpen]);
 
-    function handleExport() {
-        if (!checklist) return;
-        const blob = new Blob([serializeChecklist(checklist)], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `${checklist.name.replace(/\s+/g, "_").toLowerCase()}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
+    function handleExportPackage() {
+        if (!db) return;
+        downloadBlob(serializePackage(db), `${db.name.replace(/\s+/g, "_").toLowerCase()}.json`);
+    }
+
+    function handleExportChecklist() {
+        if (!checklist || !db) return;
+        downloadBlob(
+            serializeChecklist(checklist, nameResolverFor(db)),
+            `${checklist.name.replace(/\s+/g, "_").toLowerCase()}.json`,
+        );
     }
 
     return (
@@ -47,14 +61,14 @@ export function TopBar() {
             <span className="sep" />
             <span className="file mono">
                 <span>{db ? db.name : "—"}</span>
-                {checklist && (
+                {checklist && category && (
                     <>
                         <span className="slash">/</span>
-                        <span>{CATEGORY_LABELS[checklist.category]}</span>
+                        <span>{CATEGORY_LABELS[category]}</span>
                         {section && (
                             <>
                                 <span className="slash">/</span>
-                                <span>{section}</span>
+                                <span>{section.name}</span>
                             </>
                         )}
                         <span className="slash">/</span>
@@ -67,10 +81,33 @@ export function TopBar() {
                 {status === "saving" ? "saving changes" : "changes automatically saved"}
             </span>
             <div className="spacer" />
-            <button className="btn-export" onClick={handleExport} disabled={!checklist}>
-                <Icon name="download" size={11} />
-                Export
-            </button>
+            <div className={`export-ctl${exportOpen ? " open" : ""}`} ref={exportMenuRef}>
+                <button className="btn-export" onClick={() => setExportOpen((o) => !o)} disabled={!db}>
+                    <Icon name="download" size={11} />
+                    Export
+                </button>
+                {exportOpen && (
+                    <div className="export-menu mono">
+                        <button
+                            onClick={() => {
+                                setExportOpen(false);
+                                handleExportPackage();
+                            }}
+                        >
+                            Export package…
+                        </button>
+                        <button
+                            disabled={!checklist}
+                            onClick={() => {
+                                setExportOpen(false);
+                                handleExportChecklist();
+                            }}
+                        >
+                            Export checklist…
+                        </button>
+                    </div>
+                )}
+            </div>
         </header>
     );
 }

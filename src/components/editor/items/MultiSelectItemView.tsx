@@ -1,4 +1,5 @@
 import type { MultiSelectItem } from "../../../checklist";
+import { Icon } from "../../../icons";
 import { ITEM_TYPE_META } from "../../../itemUtils";
 import { useDispatch } from "../../../state";
 import { EditableText } from "../../common/EditableText";
@@ -34,6 +35,15 @@ export function MultiSelectItemView({ item, number }: { item: MultiSelectItem; n
                                     commit="blur"
                                 />
                             </span>
+                            {list.length > 0 && keys.length > 1 && (
+                                <button
+                                    className="vH-branch-copy"
+                                    title="Copy these items to the other options"
+                                    onClick={() => dispatch({ type: "copy-branch", itemId: item.id, fromKey: key })}
+                                >
+                                    <Icon name="copy" size={10} />
+                                </button>
+                            )}
                             {canDelete && (
                                 <button
                                     className="vH-branch-del"

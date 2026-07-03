@@ -6,6 +6,12 @@ export interface ActionItem {
     challenge: string;
     response?: string;
     extension?: string;
+    /** Flags this action as a limitation. */
+    limitation?: boolean;
+    /** Id of another checklist this item defers to. */
+    defer?: string;
+    /** Id of another checklist to follow on to after this item. */
+    followOn?: string;
 }
 
 export interface SensedItem {
@@ -13,7 +19,8 @@ export interface SensedItem {
     id: string;
     challenge: string;
     response?: string;
-    sensed: string;
+    /** Numeric ECL_VARIABLE index (see lib/vars.ts), not the variable name. */
+    sensed?: number;
     inverted?: boolean;
     latchable?: boolean;
 }
@@ -50,37 +57,47 @@ export type ChecklistItem = ActionItem | SensedItem | ConditionalItem | MultiSel
 
 export type ItemType = ChecklistItem["type"];
 
-export type Category = "normal" | "non-normal" | "procedure";
+export type Category = "normal" | "non_normal" | "procedure";
 
-export interface SectionHeader {
-    kind: "header";
-    id: string;
-    name: string;
-}
+export type Phase = "pre-flight" | "in-flight" | "post-flight";
 
 export interface Checklist {
     kind?: "checklist";
     id: string;
     name: string;
-    category: Category;
     items: ChecklistItem[];
+    /** Non-normal only. */
     cas?: CasMessage;
+    /** Normal only. */
+    phase?: Phase;
 }
 
-export type CategoryEntry = Checklist | SectionHeader;
+/** A named group of checklists shown together in the sidebar (non_normal, by system; procedure, by phase/task). */
+export interface Section {
+    kind: "section";
+    id: string;
+    name: string;
+    checklists: Checklist[];
+}
 
 export interface ChecklistDatabase {
     id: string;
     name: string;
-    categories: Record<Category, CategoryEntry[]>;
-}
-
-export function isHeader(entry: CategoryEntry): entry is SectionHeader {
-    return (entry as SectionHeader).kind === "header";
+    categories: {
+        normal: Checklist[];
+        non_normal: Section[];
+        procedure: Section[];
+    };
 }
 
 export const CATEGORY_LABELS: Record<Category, string> = {
     normal: "Normal",
-    "non-normal": "Non-Normal",
+    non_normal: "Non-Normal",
     procedure: "Procedure",
+};
+
+export const PHASE_LABELS: Record<Phase, string> = {
+    "pre-flight": "Pre-Flight",
+    "in-flight": "In-Flight",
+    "post-flight": "Post-Flight",
 };

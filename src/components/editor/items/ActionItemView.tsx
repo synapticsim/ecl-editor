@@ -1,12 +1,19 @@
 import type { ActionItem } from "../../../checklist";
 import { ITEM_TYPE_META } from "../../../itemUtils";
-import { useDispatch } from "../../../state";
+import { allChecklists, useDispatch, useSelectedChecklist } from "../../../state";
+import { Combobox } from "../../common/Combobox";
 import { EditableText } from "../../common/EditableText";
 import { RowFrame } from "./RowFrame";
 
 export function ActionItemView({ item, number }: { item: ActionItem; number: string }) {
     const dispatch = useDispatch();
+    const { checklist, db } = useSelectedChecklist();
     const update = (patch: Partial<ActionItem>) => dispatch({ type: "update-item", itemId: item.id, patch });
+
+    const otherChecklists = db ? allChecklists(db).filter((cl) => cl.id !== checklist?.id) : [];
+    const nameOf = (id: string) => otherChecklists.find((cl) => cl.id === id)?.name ?? `#${id}`;
+    const idOf = (name: string) => otherChecklists.find((cl) => cl.name === name)?.id;
+    const options = otherChecklists.map((cl) => cl.name);
 
     return (
         <RowFrame item={item} number={number} color={ITEM_TYPE_META.action.cssVar}>
@@ -38,6 +45,51 @@ export function ActionItemView({ item, number }: { item: ActionItem; number: str
                     <EditableText value={item.extension} onCommit={(v) => update({ extension: v })} autoSize />
                 </div>
             )}
+            <div className="vH-meta" style={{ "--sensed": ITEM_TYPE_META.action.cssVar } as React.CSSProperties}>
+                <button
+                    className={`vH-flag${item.limitation ? " active" : ""}`}
+                    title="Flag as a limitation"
+                    onClick={() => update({ limitation: !item.limitation })}
+                >
+                    LIMITATION
+                </button>
+            </div>
+            <div className="vH-meta" style={{ "--sensed": ITEM_TYPE_META.action.cssVar } as React.CSSProperties}>
+                <span className="vH-meta-k">DEFER</span>
+                <span className="vH-meta-v">
+                    <Combobox
+                        value={item.defer ? nameOf(item.defer) : ""}
+                        options={options}
+                        onChange={(name) => update({ defer: idOf(name) })}
+                        placeholder="none"
+                    />
+                </span>
+                {item.defer && (
+                    <button className="vH-meta-clear" title="Clear defer" onClick={() => update({ defer: undefined })}>
+                        ×
+                    </button>
+                )}
+            </div>
+            <div className="vH-meta" style={{ "--sensed": ITEM_TYPE_META.action.cssVar } as React.CSSProperties}>
+                <span className="vH-meta-k">FOLLOW-ON</span>
+                <span className="vH-meta-v">
+                    <Combobox
+                        value={item.followOn ? nameOf(item.followOn) : ""}
+                        options={options}
+                        onChange={(name) => update({ followOn: idOf(name) })}
+                        placeholder="none"
+                    />
+                </span>
+                {item.followOn && (
+                    <button
+                        className="vH-meta-clear"
+                        title="Clear follow-on"
+                        onClick={() => update({ followOn: undefined })}
+                    >
+                        ×
+                    </button>
+                )}
+            </div>
         </RowFrame>
     );
 }

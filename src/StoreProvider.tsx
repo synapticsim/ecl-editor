@@ -1,16 +1,8 @@
 import { type Dispatch, type ReactNode, useCallback, useEffect, useReducer, useRef, useState } from "react";
 
+import { migrateAppState } from "./migrations";
 import { loadPersisted, savePersisted } from "./persistence";
-import {
-    type Action,
-    type AppState,
-    DispatchContext,
-    init,
-    reducer,
-    type SaveStatus,
-    StateContext,
-    StatusContext,
-} from "./state";
+import { type Action, DispatchContext, init, reducer, type SaveStatus, StateContext, StatusContext } from "./state";
 
 export function StoreProvider({ children }: { children: ReactNode }) {
     const [state, dispatch] = useReducer(reducer, undefined, init);
@@ -24,13 +16,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         dispatch(action);
     }, []);
 
-    // Hydrate from IndexedDB once on mount.
+    // Hydrate from IndexedDB once on mount. The persisted value isn't schema-
+    // validated, so it's run through migrateAppState to normalize older shapes
+    // (e.g. pre-sections data) instead of discarding them.
     useEffect(() => {
         let cancelled = false;
-        loadPersisted<AppState>().then((saved) => {
+        loadPersisted<unknown>().then((saved) => {
             if (cancelled) return;
-            if (saved && Array.isArray(saved.databases)) {
-                dispatch({ type: "hydrate", state: saved });
+            const migrated = saved ? migrateAppState(saved) : null;
+            if (migrated) {
+                dispatch({ type: "hydrate", state: migrated });
             }
             loaded.current = true;
         });

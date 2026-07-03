@@ -1,9 +1,9 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
-import { CAS_MESSAGE_OPTIONS, casMessageLabel, MESSAGE_LEVEL_COLOR } from "../../lib/cas";
-import type { CasMessage } from "../../lib/cas";
 import { Icon } from "../../icons";
+import type { CasMessage } from "../../lib/cas";
+import { CAS_MESSAGE_OPTIONS, casMessageLabel, MESSAGE_LEVEL_COLOR } from "../../lib/cas";
 import "./Combobox.css";
 
 interface Props {
@@ -27,9 +27,7 @@ export function CasCombobox({ value, onChange, placeholder = "select CAS message
     const listRef = useRef<HTMLUListElement>(null);
 
     const q = query.trim().toLowerCase();
-    const filtered = q
-        ? CAS_MESSAGE_OPTIONS.filter((o) => o.label.toLowerCase().includes(q))
-        : CAS_MESSAGE_OPTIONS;
+    const filtered = q ? CAS_MESSAGE_OPTIONS.filter((o) => o.label.toLowerCase().includes(q)) : CAS_MESSAGE_OPTIONS;
 
     function place() {
         const el = wrapRef.current;
@@ -96,7 +94,10 @@ export function CasCombobox({ value, onChange, placeholder = "select CAS message
     }
 
     const currentLabel = value !== undefined ? casMessageLabel(value) : "";
-    const currentColor = value !== undefined ? MESSAGE_LEVEL_COLOR[CAS_MESSAGE_OPTIONS.find((o) => o.message === value)!.level] : undefined;
+    const currentColor =
+        value !== undefined
+            ? MESSAGE_LEVEL_COLOR[CAS_MESSAGE_OPTIONS.find((o) => o.message === value)!.level]
+            : undefined;
 
     return (
         <div className="cbx" ref={wrapRef}>

@@ -209,8 +209,24 @@ export enum ECL_VARIABLE {
     RSP_DISPLAY_NORM,
     STEEP_APPR_SELECTED,
     TOGA_SELECTED,
-};
+    APU_BTL_SW_PRESSED,
+    L_ENG_BTL_1_SW_PRESSED,
+    L_ENG_BTL_2_SW_PRESSED,
+    R_ENG_BTL_1_SW_PRESSED,
+    R_ENG_BTL_2_SW_PRESSED,
+}
 
 export const ECL_VARIABLE_NAMES = Object.keys(ECL_VARIABLE)
     .filter((k) => Number.isNaN(Number(k)))
     .sort((a, b) => a.localeCompare(b));
+
+/** Variable name -> its numeric ECL_VARIABLE index, or undefined if unknown. */
+export function varIndex(name: string): number | undefined {
+    const v = (ECL_VARIABLE as unknown as Record<string, number>)[name];
+    return typeof v === "number" ? v : undefined;
+}
+
+/** Numeric ECL_VARIABLE index -> its variable name, or undefined if out of range. */
+export function varName(index: number): string | undefined {
+    return (ECL_VARIABLE as unknown as Record<number, string>)[index];
+}

@@ -1170,6 +1170,17 @@ export function casMessageLabel(msg: CasMessage): string {
     return CAS_MESSAGE_TEXT[msg][1];
 }
 
+/** CasMessage enum member name (e.g. "L_ENG_FIRE") -> its numeric value, or undefined if unknown. */
+export function casMessageIndex(name: string): number | undefined {
+    const v = (CasMessage as unknown as Record<string, number>)[name];
+    return typeof v === "number" ? v : undefined;
+}
+
+/** Numeric CasMessage value -> its enum member name, or undefined if out of range. */
+export function casMessageName(index: number): string | undefined {
+    return (CasMessage as unknown as Record<number, string>)[index];
+}
+
 export function casMessageLevel(msg: CasMessage): MessageLevel {
     return CAS_MESSAGE_TEXT[msg][0];
 }
@@ -1182,8 +1193,6 @@ export interface CasMessageOption {
 
 const LEVEL_ORDER = [MessageLevel.Status, MessageLevel.Advisory, MessageLevel.Caution, MessageLevel.Warning];
 
-export const CAS_MESSAGE_OPTIONS: CasMessageOption[] = (
-    Object.keys(CAS_MESSAGE_TEXT).map(Number) as CasMessage[]
-)
+export const CAS_MESSAGE_OPTIONS: CasMessageOption[] = (Object.keys(CAS_MESSAGE_TEXT).map(Number) as CasMessage[])
     .map((message) => ({ message, level: CAS_MESSAGE_TEXT[message][0], label: CAS_MESSAGE_TEXT[message][1] }))
     .sort((a, b) => LEVEL_ORDER.indexOf(a.level) - LEVEL_ORDER.indexOf(b.level) || a.label.localeCompare(b.label));
