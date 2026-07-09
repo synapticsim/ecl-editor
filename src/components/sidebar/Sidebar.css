@@ -238,6 +238,13 @@
 .tree-leaf .leaf-name {
     flex: 1;
     min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+.tree-leaf .leaf-name-line {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 .tree-leaf .leaf-meta {
     font-family: var(--font-mono);
