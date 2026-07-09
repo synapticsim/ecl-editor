@@ -52,6 +52,7 @@ function migrateDatabase(raw: unknown): ChecklistDatabase | null {
     return {
         id: typeof db.id === "string" ? db.id : uid("db"),
         name: typeof db.name === "string" ? db.name : "Untitled Database",
+        partNumber: typeof db.partNumber === "string" ? db.partNumber : undefined,
         categories: {
             normal: migrateFlatCategory(categories.normal),
             non_normal: migrateSectionedCategory(categories.non_normal ?? categories["non-normal"]),

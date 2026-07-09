@@ -162,6 +162,28 @@ export function DatabaseNode({ db, defaultOpen, selectedId, query, onSelect }: P
                     <Icon name="trash" size={11} />
                 </button>
             </div>
+            {open && (
+                <div
+                    className="tree-part-number"
+                    onClick={(e) => e.stopPropagation()}
+                    onPointerDown={(e) => e.stopPropagation()}
+                >
+                    <span className="tree-part-label">P/N</span>
+                    <EditableText
+                        value={db.partNumber ?? ""}
+                        onCommit={(v) =>
+                            dispatch({
+                                type: "set-database-part-number",
+                                dbId: db.id,
+                                partNumber: v.trim() || undefined,
+                            })
+                        }
+                        commit="blur"
+                        placeholder="part number…"
+                        className="grow"
+                    />
+                </div>
+            )}
 
             {open && (
                 <DndContext

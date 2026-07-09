@@ -110,6 +110,7 @@ export type PackageSectionExport = z.infer<typeof packageSectionExportSchema>;
 
 export const packageExportSchema = z.object({
     name: z.string(),
+    partNumber: z.string().optional(),
     normal: z.array(checklistExportSchema),
     non_normal: z.array(packageSectionExportSchema),
     procedure: z.array(packageSectionExportSchema),
@@ -291,6 +292,7 @@ export function toPackageExport(db: ChecklistDatabase): PackageExport {
     const nameOf = nameResolverFor(db);
     return {
         name: db.name,
+        partNumber: db.partNumber,
         normal: db.categories.normal.map((cl) => toExport(cl, nameOf)),
         non_normal: db.categories.non_normal.map((sec) => ({
             name: sec.name,
@@ -347,6 +349,7 @@ export function parsePackage(json: string): PackageParseResult {
         database: {
             id: uid("db"),
             name: data.name,
+            partNumber: data.partNumber,
             categories: {
                 normal: data.normal.map(hydrate),
                 non_normal: data.non_normal.map(

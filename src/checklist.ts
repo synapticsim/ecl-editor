@@ -83,6 +83,7 @@ export interface Section {
 export interface ChecklistDatabase {
     id: string;
     name: string;
+    partNumber?: string;
     categories: {
         normal: Checklist[];
         non_normal: Section[];

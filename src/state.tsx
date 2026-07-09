@@ -60,6 +60,7 @@ export type Action =
     | { type: "delete-checklist"; id: string }
     | { type: "delete-database"; dbId: string }
     | { type: "rename-database"; dbId: string; name: string }
+    | { type: "set-database-part-number"; dbId: string; partNumber: string | undefined }
     | { type: "add-section"; dbId: string; category: SectionedCategory }
     | { type: "rename-section"; dbId: string; category: SectionedCategory; id: string; name: string }
     | { type: "delete-section"; dbId: string; category: SectionedCategory; id: string }
@@ -510,6 +511,14 @@ function reducer(state: AppState, action: Action): AppState {
             return {
                 ...state,
                 databases: state.databases.map((db) => (db.id === action.dbId ? { ...db, name: action.name } : db)),
+            };
+
+        case "set-database-part-number":
+            return {
+                ...state,
+                databases: state.databases.map((db) =>
+                    db.id === action.dbId ? { ...db, partNumber: action.partNumber } : db,
+                ),
             };
 
         case "add-section": {

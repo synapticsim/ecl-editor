@@ -110,6 +110,20 @@
     background: rgba(248, 113, 113, 0.1);
 }
 
+.tree-part-number {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 1px 8px 4px 36px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--fg-3);
+}
+.tree-part-label {
+    color: var(--fg-4);
+    flex-shrink: 0;
+}
+
 /* category group */
 .tree-cat {
     padding: 8px 8px 2px 14px;
