@@ -127,6 +127,11 @@
 .vH-meta-clear:hover {
     color: #f87171;
 }
+.vH-meta-warn {
+    color: #ffe300;
+    font-size: 11px;
+    line-height: 1;
+}
 .vH-flag {
     font-family: var(--font-mono);
     font-size: 10.5px;

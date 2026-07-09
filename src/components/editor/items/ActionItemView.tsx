@@ -11,7 +11,8 @@ export function ActionItemView({ item, number }: { item: ActionItem; number: str
     const update = (patch: Partial<ActionItem>) => dispatch({ type: "update-item", itemId: item.id, patch });
 
     const otherChecklists = db ? allChecklists(db).filter((cl) => cl.id !== checklist?.id) : [];
-    const nameOf = (id: string) => otherChecklists.find((cl) => cl.id === id)?.name ?? `#${id}`;
+    const nameOf = (id: string) => otherChecklists.find((cl) => cl.id === id)?.name ?? id;
+    const isResolved = (id: string) => otherChecklists.some((cl) => cl.id === id);
     const idOf = (name: string) => otherChecklists.find((cl) => cl.name === name)?.id;
     const options = otherChecklists.map((cl) => cl.name);
 
@@ -56,6 +57,11 @@ export function ActionItemView({ item, number }: { item: ActionItem; number: str
             </div>
             <div className="vH-meta" style={{ "--sensed": ITEM_TYPE_META.action.cssVar } as React.CSSProperties}>
                 <span className="vH-meta-k">DEFER</span>
+                {item.defer && !isResolved(item.defer) && (
+                    <span className="vH-meta-warn" title="Referenced checklist not found in this package">
+                        ⚠
+                    </span>
+                )}
                 <span className="vH-meta-v">
                     <Combobox
                         value={item.defer ? nameOf(item.defer) : ""}
@@ -72,6 +78,11 @@ export function ActionItemView({ item, number }: { item: ActionItem; number: str
             </div>
             <div className="vH-meta" style={{ "--sensed": ITEM_TYPE_META.action.cssVar } as React.CSSProperties}>
                 <span className="vH-meta-k">FOLLOW-ON</span>
+                {item.followOn && !isResolved(item.followOn) && (
+                    <span className="vH-meta-warn" title="Referenced checklist not found in this package">
+                        ⚠
+                    </span>
+                )}
                 <span className="vH-meta-v">
                     <Combobox
                         value={item.followOn ? nameOf(item.followOn) : ""}

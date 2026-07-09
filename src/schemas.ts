@@ -128,8 +128,8 @@ function stripItem(it: ChecklistItem, nameOf: (id: string) => string | undefined
                 response: it.response,
                 extension: it.extension,
                 limitation: it.limitation ? true : undefined,
-                defer: it.defer ? nameOf(it.defer) : undefined,
-                followOn: it.followOn ? nameOf(it.followOn) : undefined,
+                defer: it.defer ? (nameOf(it.defer) ?? it.defer) : undefined,
+                followOn: it.followOn ? (nameOf(it.followOn) ?? it.followOn) : undefined,
             };
         case "sensed":
             return {
@@ -174,8 +174,8 @@ function hydrateItem(it: ExternalItem, idOf: (name: string) => string | undefine
                 response: it.response,
                 extension: it.extension,
                 limitation: it.limitation,
-                defer: it.defer ? idOf(it.defer) : undefined,
-                followOn: it.followOn ? idOf(it.followOn) : undefined,
+                defer: it.defer ? (idOf(it.defer) ?? it.defer) : undefined,
+                followOn: it.followOn ? (idOf(it.followOn) ?? it.followOn) : undefined,
             };
         case "sensed":
             return {
