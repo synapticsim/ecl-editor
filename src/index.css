@@ -25,11 +25,16 @@
 
     /* item-type semantic colors — "mono + accent" palette */
     --t-action: #c4c3d5;
-    --t-sensed: #c4c3d5;
     --t-conditional: #e0af68;
     --t-multiselect: #a78bfa;
     --t-freetext: #7e7d8f;
     --t-formfeed: #4a4958;
+    --t-note: #7e7d8f;
+
+    /* note item level colors — match CAS message palette */
+    --note-level-note: #ffffff;
+    --note-level-caution: #ffe300;
+    --note-level-warning: #ff0000;
 
     /* density — compact */
     --row-h: 28px;

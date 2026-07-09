@@ -189,6 +189,8 @@ function makeItem(type: ItemType): ChecklistItem {
             return { type, id, text: "New text…" };
         case "form-feed":
             return { type, id };
+        case "note":
+            return { type, id, text: "", level: "note" };
     }
 }
 

@@ -6,6 +6,7 @@ import { ConditionalItemView } from "./items/ConditionalItemView";
 import { FormFeedItemView } from "./items/FormFeedItemView";
 import { FreeTextItemView } from "./items/FreeTextItemView";
 import { MultiSelectItemView } from "./items/MultiSelectItemView";
+import { NoteItemView } from "./items/NoteItemView";
 
 export function ChecklistItemView({ item, number }: { item: ChecklistItem; number: string }) {
     switch (item.type) {
@@ -19,5 +20,7 @@ export function ChecklistItemView({ item, number }: { item: ChecklistItem; numbe
             return <FreeTextItemView item={item} number={number} />;
         case "form-feed":
             return <FormFeedItemView item={item} number={number} />;
+        case "note":
+            return <NoteItemView item={item} number={number} />;
     }
 }

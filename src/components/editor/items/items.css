@@ -316,6 +316,42 @@
     color: var(--accent);
 }
 
+/* note item */
+.vH-note {
+    padding-right: 18px;
+}
+.vH-note-header {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 4px;
+}
+.vH-note-level {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    padding: 1px 7px;
+    border-radius: 3px;
+    color: var(--fg-4);
+    border: 1px solid var(--bd-1);
+    background: transparent;
+}
+.vH-note-level:hover {
+    color: var(--fg-2);
+    border-color: var(--bd-2);
+}
+.vH-note-level.active {
+    color: var(--note-color);
+    border-color: color-mix(in oklab, var(--note-color) 40%, transparent);
+    background: color-mix(in oklab, var(--note-color) 12%, transparent);
+}
+.vH-note-text {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    color: var(--note-color);
+    font-weight: 500;
+}
+
 /* form feed */
 .vH-ff {
     padding: 4px 6px 4px 0;

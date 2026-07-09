@@ -33,6 +33,7 @@ export const ITEM_TYPE_META: Record<ChecklistItem["type"], { label: string; cssV
     action: { label: "ACTION", cssVar: "var(--t-action)", toolbar: "Action" },
     conditional: { label: "IF", cssVar: "var(--t-conditional)", toolbar: "Conditional" },
     "multi-select": { label: "MULTI", cssVar: "var(--t-multiselect)", toolbar: "Multi-select" },
-    "free-text": { label: "NOTE", cssVar: "var(--t-freetext)", toolbar: "Text" },
+    "free-text": { label: "TEXT", cssVar: "var(--t-freetext)", toolbar: "Text" },
     "form-feed": { label: "PAGE BREAK", cssVar: "var(--t-formfeed)", toolbar: "Page break" },
+    note: { label: "NOTE", cssVar: "var(--t-note)", toolbar: "Note" },
 };

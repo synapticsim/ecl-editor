@@ -208,6 +208,15 @@ function migrateItem(raw: unknown): ChecklistItem | null {
             return { type: "free-text", id, text: typeof it.text === "string" ? it.text : "" };
         case "form-feed":
             return { type: "form-feed", id };
+        case "note": {
+            const level = it.level;
+            return {
+                type: "note",
+                id,
+                text: typeof it.text === "string" ? it.text : "",
+                level: level === "caution" || level === "warning" ? level : "note",
+            };
+        }
         default:
             return null;
     }

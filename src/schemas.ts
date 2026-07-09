@@ -62,6 +62,11 @@ const externalItemSchema: z.ZodType<ExternalItem> = z.lazy(() =>
         }),
         z.object({ type: z.literal("free-text"), text: z.string() }),
         z.object({ type: z.literal("form-feed") }),
+        z.object({
+            type: z.literal("note"),
+            text: z.string(),
+            level: z.enum(["note", "caution", "warning"]),
+        }),
     ]),
 );
 
@@ -91,7 +96,8 @@ export type ExternalItem =
     | { type: "conditional"; challenge: string; paths: { YES: ExternalItem[]; NO: ExternalItem[] } }
     | { type: "multi-select"; challenge: string; paths: Record<string, ExternalItem[]> }
     | { type: "free-text"; text: string }
-    | { type: "form-feed" };
+    | { type: "form-feed" }
+    | { type: "note"; text: string; level: "note" | "caution" | "warning" };
 
 /** A checklist, on disk — no `category`, since that's contextual (which array or
  *  section it lives in within a package, or wherever the user places it on
@@ -163,6 +169,8 @@ function stripItem(it: ChecklistItem, nameOf: (id: string) => string | undefined
             return { type: "free-text", text: it.text };
         case "form-feed":
             return { type: "form-feed" };
+        case "note":
+            return { type: "note", text: it.text, level: it.level };
     }
 }
 
@@ -226,6 +234,8 @@ function hydrateItem(it: ExternalItem, idOf: (name: string) => string | undefine
             return { type: "free-text", id: uid("i"), text: it.text };
         case "form-feed":
             return { type: "form-feed", id: uid("i") };
+        case "note":
+            return { type: "note", id: uid("i"), text: it.text, level: it.level };
     }
 }
 

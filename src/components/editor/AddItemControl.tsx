@@ -5,7 +5,7 @@ import { Icon } from "../../icons";
 import { ITEM_TYPE_META } from "../../itemUtils";
 import { type ListLoc, useDispatch } from "../../state";
 
-const TYPES: ItemType[] = ["action", "conditional", "multi-select", "free-text", "form-feed"];
+const TYPES: ItemType[] = ["action", "conditional", "multi-select", "note", "free-text", "form-feed"];
 
 interface Props {
     loc: ListLoc;

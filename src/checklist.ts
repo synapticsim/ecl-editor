@@ -48,7 +48,16 @@ export interface FormFeedItem {
     id: string;
 }
 
-export type ChecklistItem = ActionItem | ConditionalItem | MultiSelectItem | FreeTextItem | FormFeedItem;
+export type NoteLevel = "note" | "caution" | "warning";
+
+export interface NoteItem {
+    type: "note";
+    id: string;
+    text: string;
+    level: NoteLevel;
+}
+
+export type ChecklistItem = ActionItem | ConditionalItem | MultiSelectItem | FreeTextItem | FormFeedItem | NoteItem;
 
 export type ItemType = ChecklistItem["type"];
 
