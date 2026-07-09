@@ -6,6 +6,7 @@ import { Icon } from "../../icons";
 import { countItems } from "../../itemUtils";
 import { useDispatch } from "../../state";
 import { useConfirm } from "../common/confirmContext";
+import { EditableText } from "../common/EditableText";
 
 interface Props {
     checklist: Checklist;
@@ -50,7 +51,15 @@ export function ChecklistLeaf({ checklist, selected, inSection, onSelect }: Prop
             >
                 ⋮⋮
             </span>
-            <span className="leaf-name">{checklist.name}</span>
+            <span className="leaf-name" onPointerDown={(e) => e.stopPropagation()}>
+                <EditableText
+                    value={checklist.name}
+                    onCommit={(v) => dispatch({ type: "set-checklist-name", id: checklist.id, name: v })}
+                    multiline
+                    clampLines={3}
+                    commit="blur"
+                />
+            </span>
             <button
                 className="vH-del"
                 title="Delete checklist"
