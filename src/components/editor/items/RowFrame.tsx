@@ -24,7 +24,11 @@ export function RowFrame({ item, number, color, children }: Props) {
             ref={setNodeRef}
             className={`vH-row${isDragging ? " dragging" : ""}`}
             data-type={item.type}
-            style={{ "--ic": color, transform: CSS.Transform.toString(transform), transition } as React.CSSProperties}
+            style={{
+                "--ic": color,
+                transform: transform ? CSS.Transform.toString({ ...transform, scaleX: 1, scaleY: 1 }) : undefined,
+                transition,
+            } as React.CSSProperties}
         >
             <span className="vH-num">{number}</span>
             <span className="vH-drag" {...attributes} {...listeners}>
