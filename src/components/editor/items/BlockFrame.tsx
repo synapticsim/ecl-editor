@@ -41,6 +41,8 @@ export function BlockFrame({ item, number, color, pill, children }: Props) {
                         onCommit={(v) => dispatch({ type: "update-item", itemId: item.id, patch: { challenge: v } })}
                         className="grow"
                         placeholder="Prompt…"
+                        multiline
+                        autoSize
                     />
                 </div>
                 <button
