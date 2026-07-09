@@ -1,6 +1,6 @@
 /* Variation H item rendering */
 .vH {
-    font-family: var(--font-sans);
+    font-family: var(--font-mono);
     color: var(--fg-1);
     display: flex;
     flex-direction: column;
@@ -218,7 +218,7 @@
     align-items: center;
     gap: 10px;
     color: var(--fg-1);
-    font-family: var(--font-sans);
+    font-family: var(--font-mono);
     font-size: 14px;
     font-weight: 500;
     padding-left: 4px;
@@ -263,7 +263,7 @@
 }
 .vH-branch-text {
     color: var(--fg-1);
-    font-family: var(--font-sans);
+    font-family: var(--font-mono);
     font-weight: 500;
     font-size: 13px;
 }

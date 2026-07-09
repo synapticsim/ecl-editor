@@ -61,7 +61,7 @@ body {
     height: 100%;
     background: var(--bg-0);
     color: var(--fg-1);
-    font-family: var(--font-sans);
+    font-family: var(--font-mono);
     font-size: var(--fs-ui);
     -webkit-font-smoothing: antialiased;
 }
