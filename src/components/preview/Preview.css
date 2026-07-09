@@ -93,6 +93,7 @@
     padding-left: 12px;
     white-space: pre;
     flex: 1;
+    tab-size: 2;
 }
 .json .k {
     color: var(--accent);
