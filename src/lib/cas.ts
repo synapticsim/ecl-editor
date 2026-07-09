@@ -938,7 +938,7 @@ export const CAS_MESSAGE_TEXT: { [key in CasMessage]: [MessageLevel, string] } =
     [CasMessage.BATT_1_OFF]: [MessageLevel.Status, "BATT 1 OFF"],
     [CasMessage.BATT_2_OFF]: [MessageLevel.Status, "BATT 2 OFF"],
     [CasMessage.ELT_ON]: [MessageLevel.Caution, "ELT ON"],
-    [CasMessage.ELT_DT_ON]: [MessageLevel.Caution, "ELT ON"],
+    [CasMessage.ELT_DT_ON]: [MessageLevel.Caution, "ELT ON (distress tracking)"],
     [CasMessage.ELT_DT_FAIL]: [MessageLevel.Advisory, "ELT FAIL"],
     [CasMessage.ELT_DT_FAULT]: [MessageLevel.Advisory, "ELT FAULT"],
     [CasMessage.EQUIP_BAY_DOOR]: [MessageLevel.Caution, "EQUIP BAY DOOR"],
