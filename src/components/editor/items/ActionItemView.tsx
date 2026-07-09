@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import type { ActionItem } from "../../../checklist";
 import { ITEM_TYPE_META } from "../../../itemUtils";
 import { ECL_VARIABLE_NAMES, varIndex, varName } from "../../../lib/vars";
@@ -11,6 +13,10 @@ export function ActionItemView({ item, number }: { item: ActionItem; number: str
     const { checklist, db } = useSelectedChecklist();
     const update = (patch: Partial<ActionItem>) => dispatch({ type: "update-item", itemId: item.id, patch });
 
+    const [deferOpen, setDeferOpen] = useState(!!item.defer);
+    const [followOnOpen, setFollowOnOpen] = useState(!!item.followOn);
+    const [timerOpen, setTimerOpen] = useState(item.timer !== undefined);
+
     const otherChecklists = db ? allChecklists(db).filter((cl) => cl.id !== checklist?.id) : [];
     const nameOf = (id: string) => otherChecklists.find((cl) => cl.id === id)?.name ?? id;
     const isResolved = (id: string) => otherChecklists.some((cl) => cl.id === id);
@@ -23,6 +29,40 @@ export function ActionItemView({ item, number }: { item: ActionItem; number: str
     const varOptions = unknownVarLabel ? [unknownVarLabel, ...ECL_VARIABLE_NAMES] : ECL_VARIABLE_NAMES;
 
     const color = ITEM_TYPE_META.action.cssVar;
+
+    const deferActive = !!item.defer || deferOpen;
+    const followOnActive = !!item.followOn || followOnOpen;
+    const timerActive = item.timer !== undefined || timerOpen;
+
+    const deferUnresolved = !!item.defer && !isResolved(item.defer);
+    const followOnUnresolved = !!item.followOn && !isResolved(item.followOn);
+
+    function toggleDefer() {
+        if (item.defer !== undefined) {
+            update({ defer: undefined });
+            setDeferOpen(false);
+        } else {
+            setDeferOpen(!deferOpen);
+        }
+    }
+
+    function toggleFollowOn() {
+        if (item.followOn !== undefined) {
+            update({ followOn: undefined });
+            setFollowOnOpen(false);
+        } else {
+            setFollowOnOpen(!followOnOpen);
+        }
+    }
+
+    function toggleTimer() {
+        if (item.timer !== undefined) {
+            update({ timer: undefined });
+            setTimerOpen(false);
+        } else {
+            setTimerOpen(!timerOpen);
+        }
+    }
 
     return (
         <RowFrame item={item} number={number} color={color}>
@@ -69,27 +109,50 @@ export function ActionItemView({ item, number }: { item: ActionItem; number: str
                 >
                     SENSED
                 </button>
-                {item.sensed !== undefined && (
-                    <>
-                        <button
-                            className={`vH-flag${item.inverted ? " active" : ""}`}
-                            title="Invert the sensed condition"
-                            onClick={() => update({ inverted: !item.inverted })}
-                        >
-                            INVERT
-                        </button>
-                        <button
-                            className={`vH-flag${item.latchable ? " active" : ""}`}
-                            title="Latch once sensed"
-                            onClick={() => update({ latchable: !item.latchable })}
-                        >
-                            LATCH
-                        </button>
-                    </>
-                )}
+                <button
+                    className={`vH-flag${timerActive ? " active" : ""}`}
+                    title="Set a countdown timer in seconds"
+                    onClick={toggleTimer}
+                >
+                    TIMER
+                </button>
+                <button
+                    className={`vH-flag${deferActive ? " active" : ""}${deferUnresolved ? " warn" : ""}`}
+                    title={
+                        deferUnresolved ? "Deferred checklist not found in this package" : "Defer to another checklist"
+                    }
+                    onClick={toggleDefer}
+                >
+                    DEFER{deferUnresolved && " ⚠"}
+                </button>
+                <button
+                    className={`vH-flag${followOnActive ? " active" : ""}${followOnUnresolved ? " warn" : ""}`}
+                    title={
+                        followOnUnresolved
+                            ? "Follow-on checklist not found in this package"
+                            : "Follow on to another checklist"
+                    }
+                    onClick={toggleFollowOn}
+                >
+                    FOLLOW-ON{followOnUnresolved && " ⚠"}
+                </button>
             </div>
             {item.sensed !== undefined && (
                 <div className="vH-meta" style={{ "--sensed": color } as React.CSSProperties}>
+                    <button
+                        className={`vH-flag${item.inverted ? " active" : ""}`}
+                        title="Invert the sensed condition"
+                        onClick={() => update({ inverted: !item.inverted })}
+                    >
+                        INVERT
+                    </button>
+                    <button
+                        className={`vH-flag${item.latchable ? " active" : ""}`}
+                        title="Latch once sensed"
+                        onClick={() => update({ latchable: !item.latchable })}
+                    >
+                        LATCH
+                    </button>
                     <span className="vH-meta-v">
                         <Combobox
                             value={currentVarName ?? unknownVarLabel ?? ""}
@@ -103,69 +166,51 @@ export function ActionItemView({ item, number }: { item: ActionItem; number: str
                     </span>
                 </div>
             )}
-            <div className="vH-meta" style={{ "--sensed": color } as React.CSSProperties}>
-                <span className="vH-meta-k">TIMER</span>
-                <span className="vH-meta-v">
-                    <input
-                        className="vH-timer-input"
-                        type="number"
-                        min={1}
-                        value={item.timer ?? ""}
-                        placeholder="off"
-                        onChange={(e) => {
-                            const v = Number.parseInt(e.target.value, 10);
-                            update({ timer: Number.isNaN(v) || v <= 0 ? undefined : v });
-                        }}
-                    />
-                </span>
-                {item.timer !== undefined && <span className="vH-meta-unit">s</span>}
-            </div>
-            <div className="vH-meta" style={{ "--sensed": color } as React.CSSProperties}>
-                <span className="vH-meta-k">DEFER</span>
-                {item.defer && !isResolved(item.defer) && (
-                    <span className="vH-meta-warn" title="Referenced checklist not found in this package">
-                        ⚠
+            {timerActive && (
+                <div className="vH-meta" style={{ "--sensed": color } as React.CSSProperties}>
+                    <span className="vH-meta-k">TIMER</span>
+                    <span className="vH-meta-v">
+                        <input
+                            className="vH-timer-input"
+                            type="number"
+                            min={1}
+                            value={item.timer ?? ""}
+                                autoFocus={item.timer === undefined}
+                            onChange={(e) => {
+                                const v = Number.parseInt(e.target.value, 10);
+                                update({ timer: Number.isNaN(v) || v <= 0 ? undefined : v });
+                            }}
+                        />
                     </span>
-                )}
-                <span className="vH-meta-v">
-                    <Combobox
-                        value={item.defer ? nameOf(item.defer) : ""}
-                        options={options}
-                        onChange={(name) => update({ defer: idOf(name) })}
-                        placeholder="none"
-                    />
-                </span>
-                {item.defer && (
-                    <button className="vH-meta-clear" title="Clear defer" onClick={() => update({ defer: undefined })}>
-                        ×
-                    </button>
-                )}
-            </div>
-            <div className="vH-meta" style={{ "--sensed": color } as React.CSSProperties}>
-                <span className="vH-meta-k">FOLLOW-ON</span>
-                {item.followOn && !isResolved(item.followOn) && (
-                    <span className="vH-meta-warn" title="Referenced checklist not found in this package">
-                        ⚠
+                    <span className="vH-meta-unit">s</span>
+                </div>
+            )}
+            {deferActive && (
+                <div className="vH-meta" style={{ "--sensed": color } as React.CSSProperties}>
+                    <span className="vH-meta-k">DEFER</span>
+                    <span className="vH-meta-v">
+                        <Combobox
+                            value={item.defer ? nameOf(item.defer) : ""}
+                            options={options}
+                            onChange={(name) => update({ defer: idOf(name) })}
+                            placeholder="select checklist…"
+                        />
                     </span>
-                )}
-                <span className="vH-meta-v">
-                    <Combobox
-                        value={item.followOn ? nameOf(item.followOn) : ""}
-                        options={options}
-                        onChange={(name) => update({ followOn: idOf(name) })}
-                        placeholder="none"
-                    />
-                </span>
-                {item.followOn && (
-                    <button
-                        className="vH-meta-clear"
-                        title="Clear follow-on"
-                        onClick={() => update({ followOn: undefined })}
-                    >
-                        ×
-                    </button>
-                )}
-            </div>
+                </div>
+            )}
+            {followOnActive && (
+                <div className="vH-meta" style={{ "--sensed": color } as React.CSSProperties}>
+                    <span className="vH-meta-k">FOLLOW-ON</span>
+                    <span className="vH-meta-v">
+                        <Combobox
+                            value={item.followOn ? nameOf(item.followOn) : ""}
+                            options={options}
+                            onChange={(name) => update({ followOn: idOf(name) })}
+                            placeholder="select checklist…"
+                        />
+                    </span>
+                </div>
+            )}
         </RowFrame>
     );
 }

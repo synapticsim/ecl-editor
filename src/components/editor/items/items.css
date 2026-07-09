@@ -127,24 +127,29 @@
 .vH-meta-clear:hover {
     color: #f87171;
 }
-.vH-meta-warn {
-    color: #ffe300;
-    font-size: 11px;
-    line-height: 1;
-}
 .vH-meta-unit {
     color: var(--fg-4);
     font-size: 10.5px;
 }
 .vH-timer-input {
-    width: 48px;
+    width: 52px;
     font-family: var(--font-mono);
     font-size: 11.5px;
     color: var(--sensed);
-    background: transparent;
-    border: 0;
-    padding: 0;
+    background: var(--bg-input);
+    border: 1px solid var(--bd-1);
+    border-radius: 4px;
+    padding: 2px 6px;
+    height: 20px;
     -moz-appearance: textfield;
+}
+.vH-timer-input:hover {
+    border-color: var(--bd-2);
+}
+.vH-timer-input:focus {
+    border-color: var(--accent-line);
+    box-shadow: 0 0 0 2px var(--accent-soft);
+    outline: none;
 }
 .vH-timer-input::-webkit-inner-spin-button,
 .vH-timer-input::-webkit-outer-spin-button {
@@ -169,6 +174,11 @@
     color: var(--sensed);
     border-color: color-mix(in oklab, var(--sensed) 45%, transparent);
     background: color-mix(in oklab, var(--sensed) 16%, transparent);
+}
+.vH-flag.warn {
+    color: #ffe300;
+    border-color: color-mix(in oklab, #ffe300 45%, transparent);
+    background: color-mix(in oklab, #ffe300 12%, transparent);
 }
 .vH-ext {
     margin-top: 3px;
@@ -348,7 +358,7 @@
 .vH-note-text {
     font-family: var(--font-mono);
     font-size: 12.5px;
-    color: var(--note-color);
+    color: var(--fg-1);
     font-weight: 500;
 }
 
