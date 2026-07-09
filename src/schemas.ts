@@ -260,7 +260,7 @@ export function toExport(cl: Checklist, nameOf: (id: string) => string | undefin
 }
 
 export function serializeChecklist(cl: Checklist, nameOf: (id: string) => string | undefined): string {
-    return JSON.stringify(toExport(cl, nameOf), null, 4);
+    return JSON.stringify(toExport(cl, nameOf), null, "\t");
 }
 
 function hydrateChecklistWithId(
@@ -326,7 +326,7 @@ export function toPackageExport(db: ChecklistDatabase): PackageExport {
 }
 
 export function serializePackage(db: ChecklistDatabase): string {
-    return JSON.stringify(toPackageExport(db), null, 4);
+    return JSON.stringify(toPackageExport(db), null, "\t");
 }
 
 export type PackageParseResult = { ok: true; database: ChecklistDatabase } | { ok: false; error: string };
