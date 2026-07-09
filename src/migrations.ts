@@ -156,7 +156,10 @@ function migrateItem(raw: unknown): ChecklistItem | null {
     const response = typeof it.response === "string" ? it.response : undefined;
 
     switch (it.type) {
-        case "action":
+        case "action": {
+            let sensed: number | undefined;
+            if (typeof it.sensed === "number") sensed = it.sensed;
+            else if (typeof it.sensed === "string" && it.sensed) sensed = varIndex(it.sensed);
             return {
                 type: "action",
                 id,
@@ -166,13 +169,18 @@ function migrateItem(raw: unknown): ChecklistItem | null {
                 limitation: typeof it.limitation === "boolean" ? it.limitation : undefined,
                 defer: typeof it.defer === "string" ? it.defer : undefined,
                 followOn: typeof it.followOn === "string" ? it.followOn : undefined,
+                sensed,
+                inverted: typeof it.inverted === "boolean" ? it.inverted : undefined,
+                latchable: typeof it.latchable === "boolean" ? it.latchable : undefined,
+                timer: typeof it.timer === "number" && it.timer > 0 ? it.timer : undefined,
             };
+        }
         case "sensed": {
             let sensed: number | undefined;
             if (typeof it.sensed === "number") sensed = it.sensed;
             else if (typeof it.sensed === "string" && it.sensed) sensed = varIndex(it.sensed);
             return {
-                type: "sensed",
+                type: "action",
                 id,
                 challenge,
                 response,

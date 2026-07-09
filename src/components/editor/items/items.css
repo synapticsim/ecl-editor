@@ -132,6 +132,24 @@
     font-size: 11px;
     line-height: 1;
 }
+.vH-meta-unit {
+    color: var(--fg-4);
+    font-size: 10.5px;
+}
+.vH-timer-input {
+    width: 48px;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: var(--sensed);
+    background: transparent;
+    border: 0;
+    padding: 0;
+    -moz-appearance: textfield;
+}
+.vH-timer-input::-webkit-inner-spin-button,
+.vH-timer-input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+}
 .vH-flag {
     font-family: var(--font-mono);
     font-size: 10.5px;

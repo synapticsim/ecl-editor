@@ -12,17 +12,12 @@ export interface ActionItem {
     defer?: string;
     /** Id of another checklist to follow on to after this item. */
     followOn?: string;
-}
-
-export interface SensedItem {
-    type: "sensed";
-    id: string;
-    challenge: string;
-    response?: string;
     /** Numeric ECL_VARIABLE index (see lib/vars.ts), not the variable name. */
     sensed?: number;
     inverted?: boolean;
     latchable?: boolean;
+    /** Duration in seconds for timed items. */
+    timer?: number;
 }
 
 export interface ConditionalItem {
@@ -53,7 +48,7 @@ export interface FormFeedItem {
     id: string;
 }
 
-export type ChecklistItem = ActionItem | SensedItem | ConditionalItem | MultiSelectItem | FreeTextItem | FormFeedItem;
+export type ChecklistItem = ActionItem | ConditionalItem | MultiSelectItem | FreeTextItem | FormFeedItem;
 
 export type ItemType = ChecklistItem["type"];
 

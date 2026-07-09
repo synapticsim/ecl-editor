@@ -181,8 +181,6 @@ function makeItem(type: ItemType): ChecklistItem {
     switch (type) {
         case "action":
             return { type, id, challenge: "NEW ITEM", response: "" };
-        case "sensed":
-            return { type, id, challenge: "NEW ITEM", response: "" };
         case "conditional":
             return { type, id, challenge: "New condition?", paths: { YES: [], NO: [] } };
         case "multi-select":

@@ -1,5 +1,6 @@
 import type { ActionItem } from "../../../checklist";
 import { ITEM_TYPE_META } from "../../../itemUtils";
+import { ECL_VARIABLE_NAMES, varIndex, varName } from "../../../lib/vars";
 import { allChecklists, useDispatch, useSelectedChecklist } from "../../../state";
 import { Combobox } from "../../common/Combobox";
 import { EditableText } from "../../common/EditableText";
@@ -16,8 +17,15 @@ export function ActionItemView({ item, number }: { item: ActionItem; number: str
     const idOf = (name: string) => otherChecklists.find((cl) => cl.name === name)?.id;
     const options = otherChecklists.map((cl) => cl.name);
 
+    const currentVarName = item.sensed !== undefined ? varName(item.sensed) : undefined;
+    const unknownVarLabel =
+        item.sensed !== undefined && currentVarName === undefined ? `#${item.sensed} (unknown)` : null;
+    const varOptions = unknownVarLabel ? [unknownVarLabel, ...ECL_VARIABLE_NAMES] : ECL_VARIABLE_NAMES;
+
+    const color = ITEM_TYPE_META.action.cssVar;
+
     return (
-        <RowFrame item={item} number={number} color={ITEM_TYPE_META.action.cssVar}>
+        <RowFrame item={item} number={number} color={color}>
             <div className="vH-action">
                 <span className="vH-ch">
                     <EditableText
@@ -46,7 +54,7 @@ export function ActionItemView({ item, number }: { item: ActionItem; number: str
                     <EditableText value={item.extension} onCommit={(v) => update({ extension: v })} autoSize />
                 </div>
             )}
-            <div className="vH-meta" style={{ "--sensed": ITEM_TYPE_META.action.cssVar } as React.CSSProperties}>
+            <div className="vH-meta" style={{ "--sensed": color } as React.CSSProperties}>
                 <button
                     className={`vH-flag${item.limitation ? " active" : ""}`}
                     title="Flag as a limitation"
@@ -54,8 +62,65 @@ export function ActionItemView({ item, number }: { item: ActionItem; number: str
                 >
                     LIMITATION
                 </button>
+                <button
+                    className={`vH-flag${item.sensed !== undefined ? " active" : ""}`}
+                    title="Link to an ECL variable for automatic sensing"
+                    onClick={() => update({ sensed: item.sensed !== undefined ? undefined : 0 })}
+                >
+                    SENSED
+                </button>
+                {item.sensed !== undefined && (
+                    <>
+                        <button
+                            className={`vH-flag${item.inverted ? " active" : ""}`}
+                            title="Invert the sensed condition"
+                            onClick={() => update({ inverted: !item.inverted })}
+                        >
+                            INVERT
+                        </button>
+                        <button
+                            className={`vH-flag${item.latchable ? " active" : ""}`}
+                            title="Latch once sensed"
+                            onClick={() => update({ latchable: !item.latchable })}
+                        >
+                            LATCH
+                        </button>
+                    </>
+                )}
             </div>
-            <div className="vH-meta" style={{ "--sensed": ITEM_TYPE_META.action.cssVar } as React.CSSProperties}>
+            {item.sensed !== undefined && (
+                <div className="vH-meta" style={{ "--sensed": color } as React.CSSProperties}>
+                    <span className="vH-meta-v">
+                        <Combobox
+                            value={currentVarName ?? unknownVarLabel ?? ""}
+                            options={varOptions}
+                            onChange={(v) => {
+                                const idx = varIndex(v);
+                                if (idx !== undefined) update({ sensed: idx });
+                            }}
+                            placeholder="select variable…"
+                        />
+                    </span>
+                </div>
+            )}
+            <div className="vH-meta" style={{ "--sensed": color } as React.CSSProperties}>
+                <span className="vH-meta-k">TIMER</span>
+                <span className="vH-meta-v">
+                    <input
+                        className="vH-timer-input"
+                        type="number"
+                        min={1}
+                        value={item.timer ?? ""}
+                        placeholder="off"
+                        onChange={(e) => {
+                            const v = Number.parseInt(e.target.value, 10);
+                            update({ timer: Number.isNaN(v) || v <= 0 ? undefined : v });
+                        }}
+                    />
+                </span>
+                {item.timer !== undefined && <span className="vH-meta-unit">s</span>}
+            </div>
+            <div className="vH-meta" style={{ "--sensed": color } as React.CSSProperties}>
                 <span className="vH-meta-k">DEFER</span>
                 {item.defer && !isResolved(item.defer) && (
                     <span className="vH-meta-warn" title="Referenced checklist not found in this package">
@@ -76,7 +141,7 @@ export function ActionItemView({ item, number }: { item: ActionItem; number: str
                     </button>
                 )}
             </div>
-            <div className="vH-meta" style={{ "--sensed": ITEM_TYPE_META.action.cssVar } as React.CSSProperties}>
+            <div className="vH-meta" style={{ "--sensed": color } as React.CSSProperties}>
                 <span className="vH-meta-k">FOLLOW-ON</span>
                 {item.followOn && !isResolved(item.followOn) && (
                     <span className="vH-meta-warn" title="Referenced checklist not found in this package">

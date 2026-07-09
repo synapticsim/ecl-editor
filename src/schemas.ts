@@ -24,26 +24,28 @@ const baseAction = {
 const casMessageSchema = z.union([z.number().int(), z.string()]);
 const phaseSchema = z.enum(["pre-flight", "in-flight", "post-flight"]);
 
+const baseSensed = {
+    sensed: z.union([z.number().int(), z.string()]).optional(),
+    inverted: z.boolean().optional(),
+    latchable: z.boolean().optional(),
+};
+
 const externalItemSchema: z.ZodType<ExternalItem> = z.lazy(() =>
     z.discriminatedUnion("type", [
         z.object({
             type: z.literal("action"),
             ...baseAction,
             limitation: z.boolean().optional(),
-            // Target checklist referenced by name (portable across re-imports,
-            // unlike the editor's internal ids).
             defer: z.string().optional(),
             followOn: z.string().optional(),
+            ...baseSensed,
+            timer: z.number().int().positive().optional(),
         }),
+        // Legacy "sensed" type — accepted on import, converted to "action".
         z.object({
             type: z.literal("sensed"),
             ...baseAction,
-            // ECL_VARIABLE name (e.g. "DOME_ON") is exported. The numeric index
-            // is also accepted on import for files exported while this stored
-            // the numeric index instead.
-            sensed: z.union([z.number().int(), z.string()]).optional(),
-            inverted: z.boolean().optional(),
-            latchable: z.boolean().optional(),
+            ...baseSensed,
         }),
         z.object({
             type: z.literal("conditional"),
@@ -72,6 +74,10 @@ export type ExternalItem =
           limitation?: boolean;
           defer?: string;
           followOn?: string;
+          sensed?: number | string;
+          inverted?: boolean;
+          latchable?: boolean;
+          timer?: number;
       }
     | {
           type: "sensed";
@@ -131,15 +137,10 @@ function stripItem(it: ChecklistItem, nameOf: (id: string) => string | undefined
                 limitation: it.limitation ? true : undefined,
                 defer: it.defer ? (nameOf(it.defer) ?? it.defer) : undefined,
                 followOn: it.followOn ? (nameOf(it.followOn) ?? it.followOn) : undefined,
-            };
-        case "sensed":
-            return {
-                type: "sensed",
-                challenge: it.challenge,
-                response: it.response,
                 sensed: it.sensed !== undefined ? (varName(it.sensed) ?? it.sensed) : undefined,
                 inverted: it.inverted ? true : undefined,
                 latchable: it.latchable ? true : undefined,
+                timer: it.timer,
             };
         case "conditional":
             return {
@@ -177,10 +178,19 @@ function hydrateItem(it: ExternalItem, idOf: (name: string) => string | undefine
                 limitation: it.limitation,
                 defer: it.defer ? (idOf(it.defer) ?? it.defer) : undefined,
                 followOn: it.followOn ? (idOf(it.followOn) ?? it.followOn) : undefined,
+                sensed:
+                    typeof it.sensed === "number"
+                        ? it.sensed
+                        : it.sensed !== undefined
+                          ? varIndex(it.sensed)
+                          : undefined,
+                inverted: it.inverted,
+                latchable: it.latchable,
+                timer: it.timer,
             };
         case "sensed":
             return {
-                type: "sensed",
+                type: "action",
                 id: uid("i"),
                 challenge: it.challenge,
                 response: it.response,

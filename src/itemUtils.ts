@@ -31,7 +31,6 @@ export function countItems(items: ChecklistItem[]): number {
 
 export const ITEM_TYPE_META: Record<ChecklistItem["type"], { label: string; cssVar: string; toolbar: string }> = {
     action: { label: "ACTION", cssVar: "var(--t-action)", toolbar: "Action" },
-    sensed: { label: "SENSED", cssVar: "var(--t-sensed)", toolbar: "Sensed" },
     conditional: { label: "IF", cssVar: "var(--t-conditional)", toolbar: "Conditional" },
     "multi-select": { label: "MULTI", cssVar: "var(--t-multiselect)", toolbar: "Multi-select" },
     "free-text": { label: "NOTE", cssVar: "var(--t-freetext)", toolbar: "Text" },

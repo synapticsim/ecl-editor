@@ -6,14 +6,11 @@ import { ConditionalItemView } from "./items/ConditionalItemView";
 import { FormFeedItemView } from "./items/FormFeedItemView";
 import { FreeTextItemView } from "./items/FreeTextItemView";
 import { MultiSelectItemView } from "./items/MultiSelectItemView";
-import { SensedItemView } from "./items/SensedItemView";
 
 export function ChecklistItemView({ item, number }: { item: ChecklistItem; number: string }) {
     switch (item.type) {
         case "action":
             return <ActionItemView item={item} number={number} />;
-        case "sensed":
-            return <SensedItemView item={item} number={number} />;
         case "conditional":
             return <ConditionalItemView item={item} number={number} />;
         case "multi-select":
