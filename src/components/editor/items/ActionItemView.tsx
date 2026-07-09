@@ -175,7 +175,7 @@ export function ActionItemView({ item, number }: { item: ActionItem; number: str
                             type="number"
                             min={1}
                             value={item.timer ?? ""}
-                                autoFocus={item.timer === undefined}
+                            autoFocus={item.timer === undefined}
                             onChange={(e) => {
                                 const v = Number.parseInt(e.target.value, 10);
                                 update({ timer: Number.isNaN(v) || v <= 0 ? undefined : v });

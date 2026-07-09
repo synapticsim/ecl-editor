@@ -26,11 +26,13 @@ export function BlockFrame({ item, number, color, pill, children }: Props) {
             ref={setNodeRef}
             className={`vH-block${isDragging ? " dragging" : ""}`}
             data-type={item.type}
-            style={{
-                "--ic": color,
-                transform: transform ? CSS.Transform.toString({ ...transform, scaleX: 1, scaleY: 1 }) : undefined,
-                transition,
-            } as React.CSSProperties}
+            style={
+                {
+                    "--ic": color,
+                    transform: transform ? CSS.Transform.toString({ ...transform, scaleX: 1, scaleY: 1 }) : undefined,
+                    transition,
+                } as React.CSSProperties
+            }
         >
             <div className="vH-block-head">
                 <span className="vH-num">{number}</span>
