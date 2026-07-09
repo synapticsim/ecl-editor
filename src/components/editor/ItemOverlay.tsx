@@ -37,6 +37,7 @@ function ActionOverlay({ item }: { item: ActionItem }) {
                     <span className="vH-flag">TIMER</span>
                     <span className="vH-flag">DEFER</span>
                     <span className="vH-flag">FOLLOW-ON</span>
+                    <span className="vH-flag">COMMENT</span>
                 </div>
                 {item.sensed !== undefined && (
                     <div className="vH-meta" style={sensedStyle}>
@@ -61,6 +62,11 @@ function ActionOverlay({ item }: { item: ActionItem }) {
                     <div className="vH-meta" style={sensedStyle}>
                         <span className="vH-meta-k">FOLLOW-ON</span>
                         <span className="vH-meta-v">—</span>
+                    </div>
+                )}
+                {item.comment && (
+                    <div className="vH-comment" style={{ whiteSpace: "pre", lineHeight: 1.4 }}>
+                        {item.comment}
                     </div>
                 )}
             </div>

@@ -16,6 +16,7 @@ export function ActionItemView({ item, number }: { item: ActionItem; number: str
     const [deferOpen, setDeferOpen] = useState(!!item.defer);
     const [followOnOpen, setFollowOnOpen] = useState(!!item.followOn);
     const [timerOpen, setTimerOpen] = useState(item.timer !== undefined);
+    const [commentOpen, setCommentOpen] = useState(item.comment !== undefined);
 
     const otherChecklists = db ? allChecklists(db).filter((cl) => cl.id !== checklist?.id) : [];
     const nameOf = (id: string) => otherChecklists.find((cl) => cl.id === id)?.name ?? id;
@@ -33,6 +34,7 @@ export function ActionItemView({ item, number }: { item: ActionItem; number: str
     const deferActive = !!item.defer || deferOpen;
     const followOnActive = !!item.followOn || followOnOpen;
     const timerActive = item.timer !== undefined || timerOpen;
+    const commentActive = item.comment !== undefined || commentOpen;
 
     const deferUnresolved = !!item.defer && !isResolved(item.defer);
     const followOnUnresolved = !!item.followOn && !isResolved(item.followOn);
@@ -61,6 +63,15 @@ export function ActionItemView({ item, number }: { item: ActionItem; number: str
             setTimerOpen(false);
         } else {
             setTimerOpen(!timerOpen);
+        }
+    }
+
+    function toggleComment() {
+        if (item.comment !== undefined) {
+            update({ comment: undefined });
+            setCommentOpen(false);
+        } else {
+            setCommentOpen(!commentOpen);
         }
     }
 
@@ -136,6 +147,13 @@ export function ActionItemView({ item, number }: { item: ActionItem; number: str
                 >
                     FOLLOW-ON{followOnUnresolved && " ⚠"}
                 </button>
+                <button
+                    className={`vH-flag${commentActive ? " active" : ""}`}
+                    title="Add a comment"
+                    onClick={toggleComment}
+                >
+                    COMMENT
+                </button>
             </div>
             {item.sensed !== undefined && (
                 <div className="vH-meta" style={{ "--sensed": color } as React.CSSProperties}>
@@ -210,6 +228,16 @@ export function ActionItemView({ item, number }: { item: ActionItem; number: str
                         />
                     </span>
                 </div>
+            )}
+            {commentActive && (
+                <EditableText
+                    value={item.comment ?? ""}
+                    onCommit={(v) => update({ comment: v || undefined })}
+                    multiline
+                    autoSize
+                    placeholder="Comment…"
+                    className="vH-comment"
+                />
             )}
         </RowFrame>
     );

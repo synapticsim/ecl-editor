@@ -40,6 +40,7 @@ const externalItemSchema: z.ZodType<ExternalItem> = z.lazy(() =>
             followOn: z.string().optional(),
             ...baseSensed,
             timer: z.number().int().positive().optional(),
+            comment: z.string().optional(),
         }),
         // Legacy "sensed" type — accepted on import, converted to "action".
         z.object({
@@ -90,6 +91,7 @@ export type ExternalItem =
           inverted?: boolean;
           latchable?: boolean;
           timer?: number;
+          comment?: string;
       }
     | {
           type: "sensed";
@@ -154,6 +156,7 @@ function stripItem(it: ChecklistItem, nameOf: (id: string) => string | undefined
                 inverted: it.inverted ? true : undefined,
                 latchable: it.latchable ? true : undefined,
                 timer: it.timer,
+                comment: it.comment,
             };
         case "conditional":
             return {
@@ -213,6 +216,7 @@ function hydrateItem(it: ExternalItem, idOf: (name: string) => string | undefine
                 inverted: it.inverted,
                 latchable: it.latchable,
                 timer: it.timer,
+                comment: it.comment,
             };
         case "sensed":
             return {

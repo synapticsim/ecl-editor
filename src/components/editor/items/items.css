@@ -100,12 +100,15 @@
     min-width: 16px;
 }
 .vH-meta {
-    margin-top: 3px;
+    margin-top: 6px;
     font-family: var(--font-mono);
     font-size: 11.5px;
     display: flex;
     gap: 4px;
     align-items: baseline;
+}
+.vH-meta + .vH-meta {
+    margin-top: 3px;
 }
 .vH-meta-k {
     color: var(--sensed);
@@ -180,6 +183,10 @@
     border-color: color-mix(in oklab, #ffe300 45%, transparent);
     background: color-mix(in oklab, #ffe300 12%, transparent);
 }
+.vH-comment {
+    margin-top: 6px;
+}
+
 .vH-ext {
     margin-top: 3px;
     font-family: var(--font-mono);

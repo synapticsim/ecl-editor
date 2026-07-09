@@ -173,6 +173,7 @@ function migrateItem(raw: unknown): ChecklistItem | null {
                 inverted: typeof it.inverted === "boolean" ? it.inverted : undefined,
                 latchable: typeof it.latchable === "boolean" ? it.latchable : undefined,
                 timer: typeof it.timer === "number" && it.timer > 0 ? it.timer : undefined,
+                comment: typeof it.comment === "string" ? it.comment : undefined,
             };
         }
         case "sensed": {

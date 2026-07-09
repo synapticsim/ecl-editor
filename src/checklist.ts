@@ -18,6 +18,7 @@ export interface ActionItem {
     latchable?: boolean;
     /** Duration in seconds for timed items. */
     timer?: number;
+    comment?: string;
 }
 
 export interface ConditionalItem {
