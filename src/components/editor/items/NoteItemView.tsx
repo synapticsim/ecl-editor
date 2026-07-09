@@ -2,6 +2,7 @@ import type { NoteItem, NoteLevel } from "../../../checklist";
 import { ITEM_TYPE_META } from "../../../itemUtils";
 import { useDispatch } from "../../../state";
 import { EditableText } from "../../common/EditableText";
+import { DeferFollowOn } from "./DeferFollowOn";
 import { RowFrame } from "./RowFrame";
 
 const LEVEL_COLOR: Record<NoteLevel, string> = {
@@ -15,9 +16,10 @@ const LEVELS: NoteLevel[] = ["note", "caution", "warning"];
 export function NoteItemView({ item, number }: { item: NoteItem; number: string }) {
     const dispatch = useDispatch();
     const update = (patch: Partial<NoteItem>) => dispatch({ type: "update-item", itemId: item.id, patch });
+    const color = ITEM_TYPE_META.note.cssVar;
 
     return (
-        <RowFrame item={item} number={number} color={ITEM_TYPE_META.note.cssVar}>
+        <RowFrame item={item} number={number} color={color}>
             <div className="vH-note">
                 <div className="vH-note-header">
                     {LEVELS.map((lvl) => (
@@ -40,6 +42,7 @@ export function NoteItemView({ item, number }: { item: NoteItem; number: string 
                     className="vH-note-text"
                 />
             </div>
+            <DeferFollowOn defer={item.defer} followOn={item.followOn} color={color} onUpdate={update} />
         </RowFrame>
     );
 }

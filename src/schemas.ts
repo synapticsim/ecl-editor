@@ -60,12 +60,19 @@ const externalItemSchema: z.ZodType<ExternalItem> = z.lazy(() =>
             challenge: z.string(),
             paths: z.record(z.string(), z.array(externalItemSchema)),
         }),
-        z.object({ type: z.literal("free-text"), text: z.string() }),
+        z.object({
+            type: z.literal("free-text"),
+            text: z.string(),
+            defer: z.string().optional(),
+            followOn: z.string().optional(),
+        }),
         z.object({ type: z.literal("form-feed") }),
         z.object({
             type: z.literal("note"),
             text: z.string(),
             level: z.enum(["note", "caution", "warning"]),
+            defer: z.string().optional(),
+            followOn: z.string().optional(),
         }),
     ]),
 );
@@ -95,9 +102,9 @@ export type ExternalItem =
       }
     | { type: "conditional"; challenge: string; paths: { YES: ExternalItem[]; NO: ExternalItem[] } }
     | { type: "multi-select"; challenge: string; paths: Record<string, ExternalItem[]> }
-    | { type: "free-text"; text: string }
+    | { type: "free-text"; text: string; defer?: string; followOn?: string }
     | { type: "form-feed" }
-    | { type: "note"; text: string; level: "note" | "caution" | "warning" };
+    | { type: "note"; text: string; level: "note" | "caution" | "warning"; defer?: string; followOn?: string };
 
 /** A checklist, on disk — no `category`, since that's contextual (which array or
  *  section it lives in within a package, or wherever the user places it on
@@ -166,11 +173,22 @@ function stripItem(it: ChecklistItem, nameOf: (id: string) => string | undefined
                 ),
             };
         case "free-text":
-            return { type: "free-text", text: it.text };
+            return {
+                type: "free-text",
+                text: it.text,
+                defer: it.defer ? (nameOf(it.defer) ?? it.defer) : undefined,
+                followOn: it.followOn ? (nameOf(it.followOn) ?? it.followOn) : undefined,
+            };
         case "form-feed":
             return { type: "form-feed" };
         case "note":
-            return { type: "note", text: it.text, level: it.level };
+            return {
+                type: "note",
+                text: it.text,
+                level: it.level,
+                defer: it.defer ? (nameOf(it.defer) ?? it.defer) : undefined,
+                followOn: it.followOn ? (nameOf(it.followOn) ?? it.followOn) : undefined,
+            };
     }
 }
 
@@ -231,11 +249,24 @@ function hydrateItem(it: ExternalItem, idOf: (name: string) => string | undefine
                 ),
             };
         case "free-text":
-            return { type: "free-text", id: uid("i"), text: it.text };
+            return {
+                type: "free-text",
+                id: uid("i"),
+                text: it.text,
+                defer: it.defer ? (idOf(it.defer) ?? it.defer) : undefined,
+                followOn: it.followOn ? (idOf(it.followOn) ?? it.followOn) : undefined,
+            };
         case "form-feed":
             return { type: "form-feed", id: uid("i") };
         case "note":
-            return { type: "note", id: uid("i"), text: it.text, level: it.level };
+            return {
+                type: "note",
+                id: uid("i"),
+                text: it.text,
+                level: it.level,
+                defer: it.defer ? (idOf(it.defer) ?? it.defer) : undefined,
+                followOn: it.followOn ? (idOf(it.followOn) ?? it.followOn) : undefined,
+            };
     }
 }
 

@@ -205,7 +205,13 @@ function migrateItem(raw: unknown): ChecklistItem | null {
             return { type: "multi-select", id, challenge, paths: migratedPaths };
         }
         case "free-text":
-            return { type: "free-text", id, text: typeof it.text === "string" ? it.text : "" };
+            return {
+                type: "free-text",
+                id,
+                text: typeof it.text === "string" ? it.text : "",
+                defer: typeof it.defer === "string" ? it.defer : undefined,
+                followOn: typeof it.followOn === "string" ? it.followOn : undefined,
+            };
         case "form-feed":
             return { type: "form-feed", id };
         case "note": {
@@ -215,6 +221,8 @@ function migrateItem(raw: unknown): ChecklistItem | null {
                 id,
                 text: typeof it.text === "string" ? it.text : "",
                 level: level === "caution" || level === "warning" ? level : "note",
+                defer: typeof it.defer === "string" ? it.defer : undefined,
+                followOn: typeof it.followOn === "string" ? it.followOn : undefined,
             };
         }
         default:

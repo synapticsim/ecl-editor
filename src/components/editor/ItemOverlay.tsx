@@ -131,11 +131,30 @@ export function ItemOverlay({ item }: { item: ChecklistItem }) {
                             {item.text}
                         </div>
                     </div>
+                    {(item.defer || item.followOn) && (
+                        <div className="vH-meta" style={{ "--sensed": color } as React.CSSProperties}>
+                            {item.defer && <span className="vH-flag active">DEFER</span>}
+                            {item.followOn && <span className="vH-flag active">FOLLOW-ON</span>}
+                        </div>
+                    )}
+                    {item.defer && (
+                        <div className="vH-meta" style={{ "--sensed": color } as React.CSSProperties}>
+                            <span className="vH-meta-k">DEFER</span>
+                            <span className="vH-meta-v">—</span>
+                        </div>
+                    )}
+                    {item.followOn && (
+                        <div className="vH-meta" style={{ "--sensed": color } as React.CSSProperties}>
+                            <span className="vH-meta-k">FOLLOW-ON</span>
+                            <span className="vH-meta-v">—</span>
+                        </div>
+                    )}
                 </div>
             </div>
         );
     }
 
+    const deferFollowOnStyle = { "--sensed": color } as React.CSSProperties;
     return (
         <div className="vH-row overlay" data-type={item.type} style={style}>
             <span className="vH-num" />
@@ -145,6 +164,24 @@ export function ItemOverlay({ item }: { item: ChecklistItem }) {
                 <div className="vH-text" style={{ whiteSpace: "pre", lineHeight: 1.5 }}>
                     {item.text}
                 </div>
+                {(item.defer || item.followOn) && (
+                    <div className="vH-meta" style={deferFollowOnStyle}>
+                        {item.defer && <span className="vH-flag active">DEFER</span>}
+                        {item.followOn && <span className="vH-flag active">FOLLOW-ON</span>}
+                    </div>
+                )}
+                {item.defer && (
+                    <div className="vH-meta" style={deferFollowOnStyle}>
+                        <span className="vH-meta-k">DEFER</span>
+                        <span className="vH-meta-v">—</span>
+                    </div>
+                )}
+                {item.followOn && (
+                    <div className="vH-meta" style={deferFollowOnStyle}>
+                        <span className="vH-meta-k">FOLLOW-ON</span>
+                        <span className="vH-meta-v">—</span>
+                    </div>
+                )}
             </div>
         </div>
     );

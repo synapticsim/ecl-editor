@@ -41,6 +41,8 @@ export interface FreeTextItem {
     type: "free-text";
     id: string;
     text: string;
+    defer?: string;
+    followOn?: string;
 }
 
 export interface FormFeedItem {
@@ -55,6 +57,8 @@ export interface NoteItem {
     id: string;
     text: string;
     level: NoteLevel;
+    defer?: string;
+    followOn?: string;
 }
 
 export type ChecklistItem = ActionItem | ConditionalItem | MultiSelectItem | FreeTextItem | FormFeedItem | NoteItem;
