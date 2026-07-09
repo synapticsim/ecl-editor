@@ -142,21 +142,9 @@ export function ItemOverlay({ item }: { item: ChecklistItem }) {
             <span className="vH-drag">⋮⋮</span>
             <span className="vH-bar" />
             <div className="vH-body">
-                {item.type === "free-text" ? (
-                    <div className="vH-text" style={{ whiteSpace: "pre", lineHeight: 1.5 }}>
-                        {item.text}
-                    </div>
-                ) : (
-                    <div className="vH-action">
-                        <span className="vH-ch" style={{ whiteSpace: "pre", lineHeight: 1.4 }}>
-                            {item.challenge}
-                        </span>
-                        <span className="vH-dots" />
-                        <span className="vH-rs" style={{ whiteSpace: "pre", lineHeight: 1.4 }}>
-                            {item.response}
-                        </span>
-                    </div>
-                )}
+                <div className="vH-text" style={{ whiteSpace: "pre", lineHeight: 1.5 }}>
+                    {item.text}
+                </div>
             </div>
         </div>
     );
