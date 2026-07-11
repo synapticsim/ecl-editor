@@ -101,8 +101,20 @@ function actionLines(item: ActionItem): string[] {
 
 /* ─── SVG primitives ─────────────────────────────────────────── */
 
-function Tick({ x, y }: { x: number; y: number }) {
-    return <rect x={x} y={y} width={22} height={22} fill="none" stroke={C_WHITE} strokeWidth={1.5} rx={2} />;
+function Tick({ x, y, sensed = false }: { x: number; y: number; sensed?: boolean }) {
+    const s = 28;
+    return (
+        <rect
+            x={x}
+            y={y}
+            width={s}
+            height={s}
+            fill={sensed ? "grey" : "black"}
+            stroke="#848484"
+            strokeWidth={2}
+            strokeLinejoin="round"
+        />
+    );
 }
 
 function T({
@@ -119,7 +131,7 @@ function T({
     children: string;
 }) {
     return (
-        <text x={x} y={y} fontFamily={FONT} fontSize={FS} textAnchor={anchor} fill={fill} style={{ whiteSpace: "pre" }}>
+        <text x={x} y={y} fontSize={FS} textAnchor={anchor} fill={fill} style={{ whiteSpace: "pre", fontFamily: FONT }}>
             {children}
         </text>
     );
@@ -131,7 +143,7 @@ function ActionRow({ item, baseY }: { item: ActionItem; baseY: number }) {
     const lines = actionLines(item);
     return (
         <g>
-            <Tick x={12} y={baseY + 9} />
+            <Tick x={12} y={baseY + 9} sensed={item.sensed !== undefined} />
             {lines.map((line, i) => (
                 <T key={i} x={49} y={baseY + 33 + HEIGHT_PER_ROW * i}>
                     {line}
