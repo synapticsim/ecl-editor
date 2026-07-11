@@ -25,12 +25,6 @@ function ActionOverlay({ item }: { item: ActionItem }) {
                         {item.response}
                     </span>
                 </div>
-                {item.extension && (
-                    <div className="vH-ext">
-                        <span className="vH-ext-k">↳</span>
-                        <span>{item.extension}</span>
-                    </div>
-                )}
                 <div className="vH-meta" style={sensedStyle}>
                     <span className="vH-flag">LIMITATION</span>
                     <span className="vH-flag">SENSED</span>

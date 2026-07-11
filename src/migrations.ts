@@ -165,7 +165,6 @@ function migrateItem(raw: unknown): ChecklistItem | null {
                 id,
                 challenge,
                 response,
-                extension: typeof it.extension === "string" ? it.extension : undefined,
                 limitation: typeof it.limitation === "boolean" ? it.limitation : undefined,
                 defer: typeof it.defer === "string" ? it.defer : undefined,
                 followOn: typeof it.followOn === "string" ? it.followOn : undefined,

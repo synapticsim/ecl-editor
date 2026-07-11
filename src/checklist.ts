@@ -5,7 +5,6 @@ export interface ActionItem {
     id: string;
     challenge: string;
     response?: string;
-    extension?: string;
     /** Flags this action as a limitation. */
     limitation?: boolean;
     /** Id of another checklist this item defers to. */

@@ -99,12 +99,6 @@ export function ActionItemView({ item, number }: { item: ActionItem; number: str
                     />
                 </span>
             </div>
-            {item.extension !== undefined && item.extension !== "" && (
-                <div className="vH-ext">
-                    <span className="vH-ext-k">↳</span>
-                    <EditableText value={item.extension} onCommit={(v) => update({ extension: v })} autoSize />
-                </div>
-            )}
             <div className="vH-meta" style={{ "--sensed": color } as React.CSSProperties}>
                 <button
                     className={`vH-flag${item.limitation ? " active" : ""}`}

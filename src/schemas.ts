@@ -15,7 +15,6 @@ export function uid(prefix = "id"): string {
 const baseAction = {
     challenge: z.string(),
     response: z.string().optional(),
-    extension: z.string().optional(),
 };
 
 // CasMessage enum-member name (e.g. "L_ENG_FIRE") is exported. The numeric
@@ -83,7 +82,6 @@ export type ExternalItem =
           type: "action";
           challenge: string;
           response?: string;
-          extension?: string;
           limitation?: boolean;
           defer?: string;
           followOn?: string;
@@ -97,7 +95,6 @@ export type ExternalItem =
           type: "sensed";
           challenge: string;
           response?: string;
-          extension?: string;
           sensed?: number | string;
           inverted?: boolean;
           latchable?: boolean;
@@ -148,7 +145,6 @@ function stripItem(it: ChecklistItem, nameOf: (id: string) => string | undefined
                 type: "action",
                 challenge: it.challenge,
                 response: it.response,
-                extension: it.extension,
                 limitation: it.limitation ? true : undefined,
                 defer: it.defer ? (nameOf(it.defer) ?? it.defer) : undefined,
                 followOn: it.followOn ? (nameOf(it.followOn) ?? it.followOn) : undefined,
@@ -203,7 +199,6 @@ function hydrateItem(it: ExternalItem, idOf: (name: string) => string | undefine
                 id: uid("i"),
                 challenge: it.challenge,
                 response: it.response,
-                extension: it.extension,
                 limitation: it.limitation,
                 defer: it.defer ? (idOf(it.defer) ?? it.defer) : undefined,
                 followOn: it.followOn ? (idOf(it.followOn) ?? it.followOn) : undefined,
