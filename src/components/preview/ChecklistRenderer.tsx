@@ -89,8 +89,8 @@ function actionLines(item: ActionItem): string[] {
     const rh = item.response.split("\n");
     const cl = ch.pop()!;
     const rl = rh.shift()!;
-    // ․ = "One Dot Leader", rendered as a full-width period by A22XMono
-    const overlap = `${cl}${rl.padStart(CHARS_PER_ROW - cl.length, "․")}`;
+    // \u2024 = "One Dot Leader", rendered as a full-width period by A22XMono
+    const overlap = `${cl}${rl.padStart(CHARS_PER_ROW - cl.length, "\u2024")}`;
     return ch
         .concat(
             overlap,
@@ -132,7 +132,7 @@ function T({
 }) {
     return (
         <text x={x} y={y} fontSize={FS} textAnchor={anchor} fill={fill} style={{ whiteSpace: "pre", fontFamily: FONT }}>
-            {children}
+            {children.replaceAll(".", "\u2024")}
         </text>
     );
 }
@@ -171,7 +171,9 @@ function NoteRow({ item, baseY }: { item: NoteItem; baseY: number }) {
     return (
         <g>
             <Tick x={12} y={baseY + 9} />
-            <rect x={260} y={baseY + 10} width={194} height={35} fill="none" stroke={borderColor} strokeWidth={2} />
+            {item.type !== "note" && (
+                <rect x={260} y={baseY + 10} width={194} height={35} fill="none" stroke={borderColor} strokeWidth={2} />
+            )}
             <T x={357} y={baseY + 38} anchor="middle">
                 {item.level.toUpperCase()}
             </T>
@@ -191,7 +193,7 @@ function RadioCircle({ cx, cy }: { cx: number; cy: number }) {
 function RadioLabel({ cx, cy, label }: { cx: number; cy: number; label: string }) {
     return (
         <text x={cx + 11 + 10} y={cy} fontFamily={FONT} fontSize={FS} fill={C_WHITE} dominantBaseline="central">
-            {label}
+            {label.replaceAll(".", "\u2024")}
         </text>
     );
 }
