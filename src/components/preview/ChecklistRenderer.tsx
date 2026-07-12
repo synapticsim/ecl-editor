@@ -239,6 +239,38 @@ function MultiSelectRow({ item, baseY }: { item: MultiSelectItem; baseY: number 
     );
 }
 
+/* ─── Scrollbar placeholder ──────────────────────────────────── */
+
+// Mirrors the real VerticalScrollBar geometry so authors can see the safe
+// content width. The thumb is fixed at 50 % to signal "more content below".
+function ScrollbarPlaceholder() {
+    const SB_X = 684; // SVG_W(740) - right-margin(6) - scrollbar-width(50)
+    const SB_Y = LIST_Y;
+    const SB_W = 50;
+    const SB_H = ROWS_PER_PAGE * HEIGHT_PER_ROW;
+    const barAreaH = SB_H - SB_W * 2;
+    const thumbH = barAreaH / 2;
+    const cx = SB_X + SB_W / 2;
+
+    const arrowUp = `${cx},${SB_Y + 17.5} ${cx - 7.5},${SB_Y + 32.5} ${cx + 7.5},${SB_Y + 32.5}`;
+    const arrowDown = `${cx},${SB_Y + SB_H - 17.5} ${cx - 7.5},${SB_Y + SB_H - 32.5} ${cx + 7.5},${SB_Y + SB_H - 32.5}`;
+
+    return (
+        <g opacity={0.6}>
+            {/* up button */}
+            <rect x={SB_X} y={SB_Y} width={SB_W} height={SB_W} fill={C_SEP} />
+            <polygon points={arrowUp} fill={C_WHITE} />
+            {/* track */}
+            <rect x={SB_X} y={SB_Y + SB_W} width={5} height={barAreaH} fill={C_SEP} />
+            {/* thumb */}
+            <rect x={SB_X + 5} y={SB_Y + SB_W} width={13} height={thumbH} fill={C_SEP} />
+            {/* down button */}
+            <rect x={SB_X} y={SB_Y + SB_H - SB_W} width={SB_W} height={SB_W} fill={C_SEP} />
+            <polygon points={arrowDown} fill={C_WHITE} />
+        </g>
+    );
+}
+
 /* ─── Page SVG ────────────────────────────────────────────────── */
 
 function Page({ name, items }: { name: string; items: LayoutItem[] }) {
@@ -255,6 +287,8 @@ function Page({ name, items }: { name: string; items: LayoutItem[] }) {
             ))}
 
             <line x1={6} x2={734} y1={168} y2={168} stroke={C_SEP} strokeWidth={2} strokeLinecap="round" />
+
+            <ScrollbarPlaceholder />
 
             {items.map(({ item, startRow }, i) => {
                 const baseY = LIST_Y + (startRow % ROWS_PER_PAGE) * HEIGHT_PER_ROW;
