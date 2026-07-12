@@ -171,7 +171,7 @@ function NoteRow({ item, baseY }: { item: NoteItem; baseY: number }) {
     return (
         <g>
             <Tick x={12} y={baseY + 9} />
-            {item.type !== "note" && (
+            {item.level !== "note" && (
                 <rect x={260} y={baseY + 10} width={194} height={35} fill="none" stroke={borderColor} strokeWidth={2} />
             )}
             <T x={357} y={baseY + 38} anchor="middle">
