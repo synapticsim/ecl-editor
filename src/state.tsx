@@ -74,7 +74,8 @@ export type Action =
           overId?: string;
       }
     | { type: "import-checklist"; dbId: string; category: Category; sectionId?: string; checklist: Checklist }
-    | { type: "import-database"; database: ChecklistDatabase };
+    | { type: "import-database"; database: ChecklistDatabase }
+    | { type: "add-database" };
 
 /* ── recursive tree helpers (pure) ─────────────────────────────── */
 
@@ -653,6 +654,15 @@ function reducer(state: AppState, action: Action): AppState {
                 databases: [...state.databases, action.database],
                 selectedChecklistId: first ? first.id : state.selectedChecklistId,
             };
+        }
+
+        case "add-database": {
+            const database: ChecklistDatabase = {
+                id: uid("db"),
+                name: "Untitled Package",
+                categories: { normal: [], non_normal: [], procedure: [] },
+            };
+            return { ...state, databases: [...state.databases, database] };
         }
     }
 }

@@ -10,18 +10,24 @@ export function Sidebar() {
     const { databases, selectedChecklistId } = useAppState();
     const dispatch = useDispatch();
     const [query, setQuery] = useState("");
+    const [createOpen, setCreateOpen] = useState(false);
     const [importOpen, setImportOpen] = useState(false);
     const packageFileRef = useRef<HTMLInputElement>(null);
     const checklistFileRef = useRef<HTMLInputElement>(null);
+    const createMenuRef = useRef<HTMLDivElement>(null);
     const importMenuRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        if (!importOpen) return;
+        if (!createOpen && !importOpen) return;
         function onDown(e: PointerEvent) {
+            if (createMenuRef.current && !createMenuRef.current.contains(e.target as Node)) setCreateOpen(false);
             if (importMenuRef.current && !importMenuRef.current.contains(e.target as Node)) setImportOpen(false);
         }
         function onKey(e: KeyboardEvent) {
-            if (e.key === "Escape") setImportOpen(false);
+            if (e.key === "Escape") {
+                setCreateOpen(false);
+                setImportOpen(false);
+            }
         }
         window.addEventListener("pointerdown", onDown);
         window.addEventListener("keydown", onKey);
@@ -29,7 +35,7 @@ export function Sidebar() {
             window.removeEventListener("pointerdown", onDown);
             window.removeEventListener("keydown", onKey);
         };
-    }, [importOpen]);
+    }, [createOpen, importOpen]);
 
     function handleImportPackageFile(e: React.ChangeEvent<HTMLInputElement>) {
         const file = e.target.files?.[0];
@@ -92,15 +98,33 @@ export function Sidebar() {
             </div>
 
             <div className="l-foot">
-                <button
-                    onClick={() => {
-                        const dbId = databases[0]?.id;
-                        if (dbId) dispatch({ type: "add-checklist", dbId, category: "normal" });
-                    }}
-                    disabled={databases.length === 0}
-                >
-                    <span className="plus">+</span> Checklist
-                </button>
+                <div className={`create-ctl${createOpen ? " open" : ""}`} ref={createMenuRef}>
+                    <button onClick={() => setCreateOpen((o) => !o)}>
+                        <span className="plus">+</span> Create
+                    </button>
+                    {createOpen && (
+                        <div className="create-menu mono">
+                            <button
+                                disabled={databases.length === 0}
+                                onClick={() => {
+                                    setCreateOpen(false);
+                                    const dbId = databases[0]?.id;
+                                    if (dbId) dispatch({ type: "add-checklist", dbId, category: "normal" });
+                                }}
+                            >
+                                Checklist
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setCreateOpen(false);
+                                    dispatch({ type: "add-database" });
+                                }}
+                            >
+                                Package
+                            </button>
+                        </div>
+                    )}
+                </div>
                 <div className={`import-ctl${importOpen ? " open" : ""}`} ref={importMenuRef}>
                     <button onClick={() => setImportOpen((o) => !o)}>
                         <Icon name="upload" size={11} /> Import
