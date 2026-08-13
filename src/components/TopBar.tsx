@@ -3,11 +3,13 @@ import "./TopBar.css";
 
 import { CATEGORY_LABELS } from "../checklist";
 import { Icon } from "../icons";
+import { toMsfsXml } from "../msfsExport";
 import { nameResolverFor, serializeChecklist, serializePackage } from "../schemas";
 import { useSaveStatus, useSelectedChecklist } from "../state";
+import { useConfirm } from "./common/confirmContext";
 
-function downloadBlob(text: string, filename: string) {
-    const blob = new Blob([text], { type: "application/json" });
+function downloadBlob(text: string, filename: string, mime = "application/json") {
+    const blob = new Blob([text], { type: mime });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -19,6 +21,7 @@ function downloadBlob(text: string, filename: string) {
 export function TopBar() {
     const { checklist, db, category, section } = useSelectedChecklist();
     const status = useSaveStatus();
+    const confirm = useConfirm();
     const [exportOpen, setExportOpen] = useState(false);
     const exportMenuRef = useRef<HTMLDivElement>(null);
 
@@ -49,6 +52,31 @@ export function TopBar() {
             serializeChecklist(checklist, nameResolverFor(db)),
             `${checklist.name.replace(/\s+/g, "_").toLowerCase()}.json`,
         );
+    }
+
+    async function handleExportMsfs() {
+        if (!db) return;
+        const { xml, warnings } = toMsfsXml(db);
+        if (warnings.length > 0) {
+            const ok = await confirm({
+                title: "Export MSFS XML",
+                message: (
+                    <ul style={{ margin: 0, paddingLeft: 18 }}>
+                        {warnings.map((w, i) => (
+                            <li key={i}>
+                                {w.checklist && <strong>{w.checklist}: </strong>}
+                                {w.message}
+                                {w.item && <span style={{ color: "var(--fg-4)" }}> ({w.item})</span>}
+                            </li>
+                        ))}
+                    </ul>
+                ),
+                confirmLabel: "Download",
+                tone: "normal",
+            });
+            if (!ok) return;
+        }
+        downloadBlob(xml, "Checklist.xml", "text/xml");
     }
 
     return (
@@ -104,6 +132,14 @@ export function TopBar() {
                             }}
                         >
                             Export checklist…
+                        </button>
+                        <button
+                            onClick={() => {
+                                setExportOpen(false);
+                                handleExportMsfs();
+                            }}
+                        >
+                            Export MSFS XML…
                         </button>
                     </div>
                 )}

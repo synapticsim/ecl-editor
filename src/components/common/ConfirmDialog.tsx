@@ -42,7 +42,10 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
                             <button className="modal-btn" onClick={() => settle(false)}>
                                 Cancel
                             </button>
-                            <button className="modal-btn danger" onClick={() => settle(true)}>
+                            <button
+                                className={`modal-btn${pending.opts.tone === "normal" ? "" : " danger"}`}
+                                onClick={() => settle(true)}
+                            >
                                 {pending.opts.confirmLabel ?? "Delete"}
                             </button>
                         </div>
