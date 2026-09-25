@@ -120,6 +120,11 @@
 .vH-meta-v {
     color: var(--sensed);
 }
+/* Follow-on target names stay neutral regardless of the item/branch's accent
+ * color, so action items and multi-select/conditional branches look the same. */
+.vH-meta-v.vH-followon-name {
+    color: var(--fg-1);
+}
 .vH-meta-clear {
     color: var(--fg-4);
     font-size: 13px;
@@ -244,16 +249,10 @@
     color: var(--ic);
     font-size: 12px;
 }
-.vH-branch-pill {
-    font-family: var(--font-mono);
-    font-size: 10.5px;
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    padding: 1px 6px;
-    border-radius: 3px;
-    background: color-mix(in oklab, var(--ic) 16%, transparent);
-    border: 1px solid color-mix(in oklab, var(--ic) 36%, transparent);
-    flex-shrink: 0;
+/* Aligns with .vH-branch-label's text start, since it isn't part of the grid
+ * that lines up ordinary item rows. */
+.vH-path-followon {
+    padding-left: 58px;
 }
 .vH-branch-text {
     color: var(--fg-1);
@@ -268,12 +267,28 @@
     border-radius: 3px;
     opacity: 0;
 }
-.vH-branch-label:hover .vH-branch-del {
+.vH-branch-label:hover .vH-branch-del,
+.vH-meta:hover .vH-branch-del {
     opacity: 0.6;
 }
 .vH-branch-del:hover {
     opacity: 1;
     color: #f87171;
+}
+.vH-followon-add {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    border: 1px dashed var(--bd-1);
+    border-radius: 4px;
+    color: var(--fg-4);
+}
+.vH-followon-add:hover {
+    border-color: var(--accent-line);
+    color: var(--accent);
 }
 .vH-branch-copy {
     display: inline-flex;

@@ -11,13 +11,12 @@ import {
 } from "@dnd-kit/core";
 import { useState } from "react";
 
-import type { Category, ChecklistDatabase } from "../../checklist";
+import type { Category, ChecklistDatabase, Section } from "../../checklist";
 import { Icon } from "../../icons";
-import { allChecklists, locateChecklist, NORMAL_DROP_ID, parseSectionDropId, useDispatch } from "../../state";
+import { allChecklists, locateChecklist, parseCategoryDropId, parseSectionDropId, useDispatch } from "../../state";
 import { useConfirm } from "../common/confirmContext";
 import { EditableText } from "../common/EditableText";
 import { CategoryGroup } from "./CategoryGroup";
-import { SectionedGroup } from "./SectionedGroup";
 
 interface Props {
     db: ChecklistDatabase;
@@ -33,25 +32,31 @@ interface DropTarget {
     overChecklistId?: string;
 }
 
+const CATEGORIES = ["normal", "non_normal", "procedure"] as const;
+
 function resolveDropTarget(db: ChecklistDatabase, overId: string): DropTarget | null {
-    if (overId === NORMAL_DROP_ID) return { category: "normal" };
-    if (db.categories.normal.some((cl) => cl.id === overId)) return { category: "normal", overChecklistId: overId };
+    const catFromId = parseCategoryDropId(overId);
+    if (catFromId) return { category: catFromId };
 
     const dropSectionId = parseSectionDropId(overId);
     if (dropSectionId) {
-        for (const category of ["non_normal", "procedure"] as const) {
-            if (db.categories[category].some((s) => s.id === dropSectionId)) {
+        for (const category of CATEGORIES) {
+            if (db.categories[category].some((e) => e.kind === "section" && e.id === dropSectionId)) {
                 return { category, sectionId: dropSectionId };
             }
         }
         return null;
     }
 
-    for (const category of ["non_normal", "procedure"] as const) {
-        for (const sec of db.categories[category]) {
-            if (sec.id === overId) return { category, sectionId: sec.id };
-            if (sec.checklists.some((cl) => cl.id === overId)) {
-                return { category, sectionId: sec.id, overChecklistId: overId };
+    for (const category of CATEGORIES) {
+        for (const entry of db.categories[category]) {
+            if (entry.kind === "checklist") {
+                if (entry.id === overId) return { category, overChecklistId: overId };
+            } else {
+                if (entry.id === overId) return { category, sectionId: entry.id };
+                if (entry.checklists.some((cl) => cl.id === overId)) {
+                    return { category, sectionId: entry.id, overChecklistId: overId };
+                }
             }
         }
     }
@@ -59,7 +64,7 @@ function resolveDropTarget(db: ChecklistDatabase, overId: string): DropTarget | 
 }
 
 function isSectionId(db: ChecklistDatabase, id: string): boolean {
-    return db.categories.non_normal.some((s) => s.id === id) || db.categories.procedure.some((s) => s.id === id);
+    return CATEGORIES.some((category) => db.categories[category].some((e) => e.kind === "section" && e.id === id));
 }
 
 export function DatabaseNode({ db, defaultOpen, selectedId, query, onSelect }: Props) {
@@ -118,10 +123,10 @@ export function DatabaseNode({ db, defaultOpen, selectedId, query, onSelect }: P
         if (activeIdStr === overId) return;
 
         if (isSectionId(db, activeIdStr)) {
-            for (const category of ["non_normal", "procedure"] as const) {
+            for (const category of CATEGORIES) {
                 const list = db.categories[category];
-                if (list.some((s) => s.id === activeIdStr) && list.some((s) => s.id === overId)) {
-                    dispatch({ type: "reorder-sections", dbId: db.id, category, activeId: activeIdStr, overId });
+                if (list.some((e) => e.id === activeIdStr) && list.some((e) => e.id === overId)) {
+                    dispatch({ type: "reorder-category-entries", dbId: db.id, category, activeId: activeIdStr, overId });
                 }
             }
             return;
@@ -142,7 +147,9 @@ export function DatabaseNode({ db, defaultOpen, selectedId, query, onSelect }: P
     const activeChecklist = activeId ? (allChecklists(db).find((cl) => cl.id === activeId) ?? null) : null;
     const activeSection =
         activeId && !activeChecklist
-            ? ([...db.categories.non_normal, ...db.categories.procedure].find((s) => s.id === activeId) ?? null)
+            ? (CATEGORIES.flatMap((category) => db.categories[category]).find(
+                  (e): e is Section => e.kind === "section" && e.id === activeId,
+              ) ?? null)
             : null;
 
     return (
@@ -197,27 +204,29 @@ export function DatabaseNode({ db, defaultOpen, selectedId, query, onSelect }: P
                     <CategoryGroup
                         dbId={db.id}
                         label="Normal"
-                        checklists={db.categories.normal}
+                        sectionWord="Section"
+                        category="normal"
+                        entries={db.categories.normal}
                         selectedId={selectedId}
                         query={query}
                         onSelect={onSelect}
                     />
-                    <SectionedGroup
+                    <CategoryGroup
                         dbId={db.id}
                         label="Non-Normal"
                         sectionWord="System"
                         category="non_normal"
-                        sections={db.categories.non_normal}
+                        entries={db.categories.non_normal}
                         selectedId={selectedId}
                         query={query}
                         onSelect={onSelect}
                     />
-                    <SectionedGroup
+                    <CategoryGroup
                         dbId={db.id}
                         label="Procedure"
                         sectionWord="Section"
                         category="procedure"
-                        sections={db.categories.procedure}
+                        entries={db.categories.procedure}
                         selectedId={selectedId}
                         query={query}
                         onSelect={onSelect}

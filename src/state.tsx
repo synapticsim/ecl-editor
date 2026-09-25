@@ -1,12 +1,9 @@
 import { createContext, type Dispatch, useContext } from "react";
 
-import type { Category, Checklist, ChecklistDatabase, ChecklistItem, ItemType, Section } from "./checklist";
+import type { Category, CategoryEntry, Checklist, ChecklistDatabase, ChecklistItem, ItemPath, ItemType, Section } from "./checklist";
 import type { CasMessage } from "./lib/cas";
 import { seedDatabases } from "./mockData";
 import { uid } from "./schemas";
-
-/** The two categories whose checklists are grouped into named sections. */
-export type SectionedCategory = "non_normal" | "procedure";
 
 /* ── list location within the selected checklist ──────────────── */
 export type ListLoc = { kind: "root" } | { kind: "branch"; parentId: string; key: string };
@@ -23,9 +20,18 @@ export function parseDropId(id: string): ListLoc | null {
 }
 
 /* ── sidebar checklist-tree drop targets ─────────────────────────
- * Distinct from checklist ids so a drop onto an empty (or trailing) list can
- * still resolve to a container even when there's nothing to drop "onto". */
-export const NORMAL_DROP_ID = "checklist-drop:normal";
+ * Distinct from checklist/section ids so a drop onto an empty (or trailing)
+ * list can still resolve to a container even when there's nothing to drop
+ * "onto". All three categories now support both top-level entries and
+ * sections, so both drop-target kinds apply uniformly to all of them. */
+export function categoryDropId(category: Category): string {
+    return `checklist-drop:category:${category}`;
+}
+export function parseCategoryDropId(id: string): Category | null {
+    const m = id.match(/^checklist-drop:category:(.+)$/);
+    if (!m) return null;
+    return m[1] === "normal" || m[1] === "non_normal" || m[1] === "procedure" ? (m[1] as Category) : null;
+}
 export function sectionDropId(sectionId: string): string {
     return `checklist-drop:section:${sectionId}`;
 }
@@ -56,15 +62,16 @@ export type Action =
     | { type: "rename-branch"; itemId: string; oldKey: string; newKey: string }
     | { type: "delete-branch"; itemId: string; key: string }
     | { type: "copy-branch"; itemId: string; fromKey: string }
+    | { type: "set-path-follow-on"; itemId: string; key: string; followOn: string[] | undefined }
     | { type: "add-checklist"; dbId: string; category: Category; sectionId?: string }
     | { type: "delete-checklist"; id: string }
     | { type: "delete-database"; dbId: string }
     | { type: "rename-database"; dbId: string; name: string }
     | { type: "set-database-part-number"; dbId: string; partNumber: string | undefined }
-    | { type: "add-section"; dbId: string; category: SectionedCategory }
-    | { type: "rename-section"; dbId: string; category: SectionedCategory; id: string; name: string }
-    | { type: "delete-section"; dbId: string; category: SectionedCategory; id: string }
-    | { type: "reorder-sections"; dbId: string; category: SectionedCategory; activeId: string; overId: string }
+    | { type: "add-section"; dbId: string; category: Category }
+    | { type: "rename-section"; dbId: string; category: Category; id: string; name: string }
+    | { type: "delete-section"; dbId: string; category: Category; id: string }
+    | { type: "reorder-category-entries"; dbId: string; category: Category; activeId: string; overId: string }
     | {
           type: "move-checklist";
           dbId: string;
@@ -85,16 +92,18 @@ function childKeys(it: ChecklistItem): string[] {
     return [];
 }
 function getChildList(it: ChecklistItem, key: string): ChecklistItem[] {
-    if (it.type === "conditional") return it.paths[key as "YES" | "NO"];
-    if (it.type === "multi-select") return it.paths[key];
+    if (it.type === "conditional") return it.paths[key as "YES" | "NO"].items;
+    if (it.type === "multi-select") return it.paths[key]?.items ?? [];
     return [];
 }
 function withChildList(it: ChecklistItem, key: string, list: ChecklistItem[]): ChecklistItem {
     if (it.type === "conditional") {
-        return { ...it, paths: { ...it.paths, [key]: list } };
+        const k = key as "YES" | "NO";
+        return { ...it, paths: { ...it.paths, [k]: { ...it.paths[k], items: list } } };
     }
     if (it.type === "multi-select") {
-        return { ...it, paths: { ...it.paths, [key]: list } };
+        const existing = it.paths[key] ?? { items: [] };
+        return { ...it, paths: { ...it.paths, [key]: { ...existing, items: list } } };
     }
     return it;
 }
@@ -183,9 +192,9 @@ function makeItem(type: ItemType): ChecklistItem {
         case "action":
             return { type, id, challenge: "NEW ITEM", response: "" };
         case "conditional":
-            return { type, id, challenge: "New condition?", paths: { YES: [], NO: [] } };
+            return { type, id, challenge: "New condition?", paths: { YES: { items: [] }, NO: { items: [] } } };
         case "multi-select":
-            return { type, id, challenge: "New selection:", paths: { "Option 1": [] } };
+            return { type, id, challenge: "New selection:", paths: { "Option 1": { items: [] } } };
         case "free-text":
             return { type, id, text: "New text…" };
         case "form-feed":
@@ -195,114 +204,134 @@ function makeItem(type: ItemType): ChecklistItem {
     }
 }
 
-/** Deep-clone an item tree with freshly generated ids. */
+/** Deep-clone an item tree with freshly generated ids. Cloned branches drop any
+ *  `followOn` — a copied branch shouldn't silently inherit a routing target. */
 function cloneItemTree(it: ChecklistItem): ChecklistItem {
     const id = uid("i");
     if (it.type === "conditional") {
-        return { ...it, id, paths: { YES: it.paths.YES.map(cloneItemTree), NO: it.paths.NO.map(cloneItemTree) } };
+        return {
+            ...it,
+            id,
+            paths: {
+                YES: { items: it.paths.YES.items.map(cloneItemTree) },
+                NO: { items: it.paths.NO.items.map(cloneItemTree) },
+            },
+        };
     }
     if (it.type === "multi-select") {
         return {
             ...it,
             id,
-            paths: Object.fromEntries(Object.entries(it.paths).map(([k, v]) => [k, v.map(cloneItemTree)])),
+            paths: Object.fromEntries(
+                Object.entries(it.paths).map(([k, v]) => [k, { items: v.items.map(cloneItemTree) }]),
+            ),
         };
     }
     return { ...it, id };
 }
 
-/* ── database-scoped helpers (normal flat, non_normal & procedure sectioned) ── */
+/* ── database-scoped helpers (all three categories: interleaved checklists + sections) ── */
+
+function flattenEntries(entries: CategoryEntry[]): Checklist[] {
+    return entries.flatMap((e) => (e.kind === "checklist" ? [e] : e.checklists));
+}
 
 export function allChecklists(db: ChecklistDatabase): Checklist[] {
     return [
-        ...db.categories.normal,
-        ...db.categories.non_normal.flatMap((sec) => sec.checklists),
-        ...db.categories.procedure.flatMap((sec) => sec.checklists),
+        ...flattenEntries(db.categories.normal),
+        ...flattenEntries(db.categories.non_normal),
+        ...flattenEntries(db.categories.procedure),
     ];
 }
 
-function sectionsOf(db: ChecklistDatabase, category: SectionedCategory): Section[] {
+function entriesOf(db: ChecklistDatabase, category: Category): CategoryEntry[] {
     return db.categories[category];
 }
 
-function withSections(db: ChecklistDatabase, category: SectionedCategory, sections: Section[]): ChecklistDatabase {
-    return { ...db, categories: { ...db.categories, [category]: sections } };
+function withEntries(db: ChecklistDatabase, category: Category, entries: CategoryEntry[]): ChecklistDatabase {
+    return { ...db, categories: { ...db.categories, [category]: entries } };
 }
 
-/** Locate which category (and, for sectioned categories, which section) holds a checklist. */
+function findSection(db: ChecklistDatabase, category: Category, sectionId: string): Section | undefined {
+    return entriesOf(db, category).find((e): e is Section => e.kind === "section" && e.id === sectionId);
+}
+
+/** Locate which category (and, if nested in one, which section) holds a checklist. */
 export function locateChecklist(
     db: ChecklistDatabase,
     checklistId: string,
 ): { category: Category; section: Section | null } | null {
-    if (db.categories.normal.some((cl) => cl.id === checklistId)) return { category: "normal", section: null };
-    for (const category of ["non_normal", "procedure"] as const) {
-        for (const sec of sectionsOf(db, category)) {
-            if (sec.checklists.some((cl) => cl.id === checklistId)) return { category, section: sec };
+    for (const category of ["normal", "non_normal", "procedure"] as const) {
+        for (const entry of entriesOf(db, category)) {
+            if (entry.kind === "checklist") {
+                if (entry.id === checklistId) return { category, section: null };
+            } else if (entry.checklists.some((cl) => cl.id === checklistId)) {
+                return { category, section: entry };
+            }
         }
     }
     return null;
+}
+
+function mapEntryChecklist(entry: CategoryEntry, id: string, fn: (cl: Checklist) => Checklist): CategoryEntry {
+    if (entry.kind === "checklist") return entry.id === id ? fn(entry) : entry;
+    return { ...entry, checklists: entry.checklists.map((cl) => (cl.id === id ? fn(cl) : cl)) };
 }
 
 function updateChecklistInDb(db: ChecklistDatabase, id: string, fn: (cl: Checklist) => Checklist): ChecklistDatabase {
     return {
         ...db,
         categories: {
-            normal: db.categories.normal.map((cl) => (cl.id === id ? fn(cl) : cl)),
-            non_normal: db.categories.non_normal.map((sec) => ({
-                ...sec,
-                checklists: sec.checklists.map((cl) => (cl.id === id ? fn(cl) : cl)),
-            })),
-            procedure: db.categories.procedure.map((sec) => ({
-                ...sec,
-                checklists: sec.checklists.map((cl) => (cl.id === id ? fn(cl) : cl)),
-            })),
+            normal: db.categories.normal.map((e) => mapEntryChecklist(e, id, fn)),
+            non_normal: db.categories.non_normal.map((e) => mapEntryChecklist(e, id, fn)),
+            procedure: db.categories.procedure.map((e) => mapEntryChecklist(e, id, fn)),
         },
     };
+}
+
+/** Removes a matching checklist entry (or strips it out of whichever section
+ *  contains it); returns `null` for a top-level entry so it's filtered away. */
+function removeEntryChecklist(entry: CategoryEntry, id: string): CategoryEntry | null {
+    if (entry.kind === "checklist") return entry.id === id ? null : entry;
+    return { ...entry, checklists: entry.checklists.filter((cl) => cl.id !== id) };
 }
 
 function removeChecklistFromDb(db: ChecklistDatabase, id: string): ChecklistDatabase {
+    const filterCategory = (entries: CategoryEntry[]) =>
+        entries.map((e) => removeEntryChecklist(e, id)).filter((e): e is CategoryEntry => e !== null);
     return {
         ...db,
         categories: {
-            normal: db.categories.normal.filter((cl) => cl.id !== id),
-            non_normal: db.categories.non_normal.map((sec) => ({
-                ...sec,
-                checklists: sec.checklists.filter((cl) => cl.id !== id),
-            })),
-            procedure: db.categories.procedure.map((sec) => ({
-                ...sec,
-                checklists: sec.checklists.filter((cl) => cl.id !== id),
-            })),
+            normal: filterCategory(db.categories.normal),
+            non_normal: filterCategory(db.categories.non_normal),
+            procedure: filterCategory(db.categories.procedure),
         },
     };
 }
 
-/** Removes a checklist from wherever it currently lives (normal, or any
- *  section), returning the updated database and the removed checklist. */
+/** Removes a checklist from wherever it currently lives (top-level in any
+ *  category, or any section), returning the updated database and the removed
+ *  checklist. */
 function removeChecklistAnywhere(
     db: ChecklistDatabase,
     id: string,
 ): { db: ChecklistDatabase; checklist: Checklist | null } {
-    const normalIdx = db.categories.normal.findIndex((cl) => cl.id === id);
-    if (normalIdx >= 0) {
-        const checklist = db.categories.normal[normalIdx];
-        return { db: removeChecklistFromDb(db, id), checklist };
-    }
-    for (const category of ["non_normal", "procedure"] as const) {
-        for (const sec of sectionsOf(db, category)) {
-            const checklist = sec.checklists.find((cl) => cl.id === id);
-            if (checklist) return { db: removeChecklistFromDb(db, id), checklist };
-        }
-    }
-    return { db, checklist: null };
+    const loc = locateChecklist(db, id);
+    if (!loc) return { db, checklist: null };
+    const checklist = loc.section
+        ? (loc.section.checklists.find((cl) => cl.id === id) ?? null)
+        : (entriesOf(db, loc.category).find((e): e is Checklist => e.kind === "checklist" && e.id === id) ?? null);
+    return { db: removeChecklistFromDb(db, id), checklist };
 }
 
-/** Inserts a checklist into `category` (and, for sectioned categories,
- *  `sectionId`) at `index`. The index must be resolved against the list
- *  *before* the checklist was removed from wherever it used to live — for a
- *  same-container move that's the same array, and re-deriving the index from
- *  the post-removal list would land one slot early (mirrors `arrayMove`,
- *  which likewise splices at the pre-removal target index). */
+/** Inserts a checklist into `category` (and, if `sectionId` is given, that
+ *  section) at `index`. With no `sectionId`, the checklist becomes a top-level
+ *  entry spliced directly into the category's interleaved entry list. The
+ *  index must be resolved against the list *before* the checklist was removed
+ *  from wherever it used to live — for a same-container move that's the same
+ *  array, and re-deriving the index from the post-removal list would land one
+ *  slot early (mirrors `arrayMove`, which likewise splices at the pre-removal
+ *  target index). */
 function insertChecklist(
     db: ChecklistDatabase,
     category: Category,
@@ -310,19 +339,18 @@ function insertChecklist(
     checklist: Checklist,
     index: number,
 ): ChecklistDatabase {
-    if (category === "normal") {
-        const list = db.categories.normal.slice();
-        list.splice(Math.max(0, Math.min(index, list.length)), 0, checklist);
-        return { ...db, categories: { ...db.categories, normal: list } };
+    if (sectionId !== undefined) {
+        const entries = entriesOf(db, category).map((e) => {
+            if (e.kind !== "section" || e.id !== sectionId) return e;
+            const list = e.checklists.slice();
+            list.splice(Math.max(0, Math.min(index, list.length)), 0, checklist);
+            return { ...e, checklists: list };
+        });
+        return withEntries(db, category, entries);
     }
-    if (!sectionId) return db;
-    const nextSections = sectionsOf(db, category).map((sec) => {
-        if (sec.id !== sectionId) return sec;
-        const list = sec.checklists.slice();
-        list.splice(Math.max(0, Math.min(index, list.length)), 0, checklist);
-        return { ...sec, checklists: list };
-    });
-    return withSections(db, category, nextSections);
+    const entries = entriesOf(db, category).slice();
+    entries.splice(Math.max(0, Math.min(index, entries.length)), 0, checklist);
+    return withEntries(db, category, entries);
 }
 
 /* ── checklist-scoped update ───────────────────────────────────── */
@@ -416,7 +444,7 @@ function reducer(state: AppState, action: Action): AppState {
                     let n = Object.keys(it.paths).length + 1;
                     let key = `Option ${n}`;
                     while (key in it.paths) key = `Option ${++n}`;
-                    return { ...it, paths: { ...it.paths, [key]: [] } };
+                    return { ...it, paths: { ...it.paths, [key]: { items: [] } } };
                 }),
             );
 
@@ -426,7 +454,7 @@ function reducer(state: AppState, action: Action): AppState {
                     if (it.type !== "multi-select") return it;
                     if (action.newKey === action.oldKey) return it;
                     if (!action.newKey || action.newKey in it.paths) return it;
-                    const paths: Record<string, ChecklistItem[]> = {};
+                    const paths: Record<string, ItemPath> = {};
                     for (const [k, v] of Object.entries(it.paths)) {
                         paths[k === action.oldKey ? action.newKey : k] = v;
                     }
@@ -452,14 +480,22 @@ function reducer(state: AppState, action: Action): AppState {
                         if (action.fromKey !== "YES" && action.fromKey !== "NO") return it;
                         const source = it.paths[action.fromKey];
                         const otherKey = action.fromKey === "YES" ? "NO" : "YES";
-                        return { ...it, paths: { ...it.paths, [otherKey]: source.map(cloneItemTree) } };
+                        return {
+                            ...it,
+                            paths: {
+                                ...it.paths,
+                                [otherKey]: { ...it.paths[otherKey], items: source.items.map(cloneItemTree) },
+                            },
+                        };
                     }
                     if (it.type === "multi-select") {
                         const source = it.paths[action.fromKey];
                         if (!source) return it;
-                        const paths: Record<string, ChecklistItem[]> = { ...it.paths };
+                        const paths: Record<string, ItemPath> = { ...it.paths };
                         for (const key of Object.keys(paths)) {
-                            if (key !== action.fromKey) paths[key] = source.map(cloneItemTree);
+                            if (key !== action.fromKey) {
+                                paths[key] = { ...paths[key], items: source.items.map(cloneItemTree) };
+                            }
                         }
                         return { ...it, paths };
                     }
@@ -467,25 +503,44 @@ function reducer(state: AppState, action: Action): AppState {
                 }),
             );
 
+        case "set-path-follow-on":
+            return mapSelectedItems(state, (items) =>
+                updateItem(items, action.itemId, (it) => {
+                    if (it.type === "conditional") {
+                        if (action.key !== "YES" && action.key !== "NO") return it;
+                        return {
+                            ...it,
+                            paths: { ...it.paths, [action.key]: { ...it.paths[action.key], followOn: action.followOn } },
+                        };
+                    }
+                    if (it.type === "multi-select") {
+                        const path = it.paths[action.key];
+                        if (!path) return it;
+                        return { ...it, paths: { ...it.paths, [action.key]: { ...path, followOn: action.followOn } } };
+                    }
+                    return it;
+                }),
+            );
+
         case "add-checklist": {
-            if (action.category !== "normal" && !action.sectionId) return state;
             const cl: Checklist = { kind: "checklist", id: uid("cl"), name: "Untitled Checklist", items: [] };
             return {
                 ...state,
                 selectedChecklistId: cl.id,
                 databases: state.databases.map((db) => {
                     if (db.id !== action.dbId) return db;
-                    if (action.category === "normal") {
-                        return { ...db, categories: { ...db.categories, normal: [...db.categories.normal, cl] } };
+                    if (action.sectionId) {
+                        return withEntries(
+                            db,
+                            action.category,
+                            entriesOf(db, action.category).map((e) =>
+                                e.kind === "section" && e.id === action.sectionId
+                                    ? { ...e, checklists: [...e.checklists, cl] }
+                                    : e,
+                            ),
+                        );
                     }
-                    const category = action.category;
-                    return withSections(
-                        db,
-                        category,
-                        sectionsOf(db, category).map((sec) =>
-                            sec.id === action.sectionId ? { ...sec, checklists: [...sec.checklists, cl] } : sec,
-                        ),
-                    );
+                    return withEntries(db, action.category, [...entriesOf(db, action.category), cl]);
                 }),
             };
         }
@@ -528,7 +583,7 @@ function reducer(state: AppState, action: Action): AppState {
                 ...state,
                 databases: state.databases.map((db) =>
                     db.id === action.dbId
-                        ? withSections(db, action.category, [...sectionsOf(db, action.category), section])
+                        ? withEntries(db, action.category, [...entriesOf(db, action.category), section])
                         : db,
                 ),
             };
@@ -539,11 +594,11 @@ function reducer(state: AppState, action: Action): AppState {
                 ...state,
                 databases: state.databases.map((db) =>
                     db.id === action.dbId
-                        ? withSections(
+                        ? withEntries(
                               db,
                               action.category,
-                              sectionsOf(db, action.category).map((sec) =>
-                                  sec.id === action.id ? { ...sec, name: action.name } : sec,
+                              entriesOf(db, action.category).map((e) =>
+                                  e.kind === "section" && e.id === action.id ? { ...e, name: action.name } : e,
                               ),
                           )
                         : db,
@@ -554,12 +609,12 @@ function reducer(state: AppState, action: Action): AppState {
             let clearSelection = false;
             const databases = state.databases.map((db) => {
                 if (db.id !== action.dbId) return db;
-                const target = sectionsOf(db, action.category).find((sec) => sec.id === action.id);
+                const target = findSection(db, action.category, action.id);
                 if (target?.checklists.some((cl) => cl.id === state.selectedChecklistId)) clearSelection = true;
-                return withSections(
+                return withEntries(
                     db,
                     action.category,
-                    sectionsOf(db, action.category).filter((sec) => sec.id !== action.id),
+                    entriesOf(db, action.category).filter((e) => !(e.kind === "section" && e.id === action.id)),
                 );
             });
             return {
@@ -569,21 +624,20 @@ function reducer(state: AppState, action: Action): AppState {
             };
         }
 
-        case "reorder-sections":
+        case "reorder-category-entries":
             return {
                 ...state,
                 databases: state.databases.map((db) => {
                     if (db.id !== action.dbId) return db;
-                    const list = sectionsOf(db, action.category);
-                    const from = list.findIndex((s) => s.id === action.activeId);
-                    const to = list.findIndex((s) => s.id === action.overId);
+                    const list = entriesOf(db, action.category);
+                    const from = list.findIndex((e) => e.id === action.activeId);
+                    const to = list.findIndex((e) => e.id === action.overId);
                     if (from < 0 || to < 0 || from === to) return db;
-                    return withSections(db, action.category, arrayMove(list, from, to));
+                    return withEntries(db, action.category, arrayMove(list, from, to));
                 }),
             };
 
         case "move-checklist": {
-            if (action.toCategory !== "normal" && !action.toSectionId) return state;
             return {
                 ...state,
                 databases: state.databases.map((db) => {
@@ -592,12 +646,11 @@ function reducer(state: AppState, action: Action): AppState {
                     // Resolve the drop index against the list *before* removal (see
                     // insertChecklist's doc comment) — for a same-container move this
                     // is the same array the checklist is about to be removed from.
-                    const targetList =
-                        action.toCategory === "normal"
-                            ? db.categories.normal
-                            : (sectionsOf(db, action.toCategory).find((s) => s.id === action.toSectionId)?.checklists ??
-                              []);
-                    const rawIndex = action.overId ? targetList.findIndex((cl) => cl.id === action.overId) : -1;
+                    const targetList: { id: string }[] =
+                        action.toSectionId !== undefined
+                            ? (findSection(db, action.toCategory, action.toSectionId)?.checklists ?? [])
+                            : entriesOf(db, action.toCategory);
+                    const rawIndex = action.overId ? targetList.findIndex((e) => e.id === action.overId) : -1;
                     const toIndex = rawIndex < 0 ? targetList.length : rawIndex;
 
                     const { db: removedDb, checklist } = removeChecklistAnywhere(db, action.checklistId);
@@ -613,37 +666,18 @@ function reducer(state: AppState, action: Action): AppState {
                 selectedChecklistId: action.checklist.id,
                 databases: state.databases.map((db) => {
                     if (db.id !== action.dbId) return db;
-                    if (action.category === "normal") {
-                        return {
-                            ...db,
-                            categories: { ...db.categories, normal: [...db.categories.normal, action.checklist] },
-                        };
+                    if (action.sectionId) {
+                        return withEntries(
+                            db,
+                            action.category,
+                            entriesOf(db, action.category).map((e) =>
+                                e.kind === "section" && e.id === action.sectionId
+                                    ? { ...e, checklists: [...e.checklists, action.checklist] }
+                                    : e,
+                            ),
+                        );
                     }
-                    const category = action.category;
-                    let sections = sectionsOf(db, category);
-                    let sectionId = action.sectionId;
-                    if (!sectionId) {
-                        const existing = sections.find((sec) => sec.name === "Imported");
-                        if (existing) {
-                            sectionId = existing.id;
-                        } else {
-                            const section: Section = {
-                                kind: "section",
-                                id: uid("sec"),
-                                name: "Imported",
-                                checklists: [],
-                            };
-                            sections = [...sections, section];
-                            sectionId = section.id;
-                        }
-                    }
-                    return withSections(
-                        db,
-                        category,
-                        sections.map((sec) =>
-                            sec.id === sectionId ? { ...sec, checklists: [...sec.checklists, action.checklist] } : sec,
-                        ),
-                    );
+                    return withEntries(db, action.category, [...entriesOf(db, action.category), action.checklist]);
                 }),
             };
 

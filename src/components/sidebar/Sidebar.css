@@ -142,12 +142,17 @@
     color: var(--fg-4);
 }
 .tree-cat .add {
-    margin-left: auto;
     color: var(--fg-4);
     font-size: 15px;
     line-height: 1;
     padding: 0 4px;
     border-radius: 3px;
+}
+/* Only the first add button pulls the group to the right edge — with
+ * margin-left: auto on every button, the leftover space would split between
+ * them instead, leaving earlier buttons stranded mid-row. */
+.tree-cat .add:first-of-type {
+    margin-left: auto;
 }
 .tree-cat .add:hover {
     background: var(--bg-3);
