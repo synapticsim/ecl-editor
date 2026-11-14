@@ -1,13 +1,12 @@
-import { useDroppable } from "@dnd-kit/core";
-import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
+import { useDraggable } from "@dnd-kit/core";
 
 import type { Category, CategoryEntry, Section } from "../../checklist";
 import { Icon } from "../../icons";
-import { categoryDropId, sectionDropId, useDispatch } from "../../state";
+import { useDispatch } from "../../state";
 import { useConfirm } from "../common/confirmContext";
 import { EditableText } from "../common/EditableText";
 import { ChecklistLeaf } from "./ChecklistLeaf";
+import { DropLine, isSlot, SECTION_BLOCK_ATTR, useDropZone, useTreeDnd } from "./treeDnd";
 
 interface Props {
     dbId: string;
@@ -24,10 +23,12 @@ interface Props {
 /** A category's interleaved top-level checklists and named sections — used
  *  uniformly for normal, non-normal, and procedure. Drag-and-drop is owned by
  *  the parent DatabaseNode (shared across categories); this only registers the
- *  sortable/droppable containers. */
+ *  drop zones and draws the insertion line. */
 export function CategoryGroup({ dbId, label, sectionWord, category, entries, selectedId, query, onSelect }: Props) {
     const dispatch = useDispatch();
-    const { setNodeRef: setCategoryDropRef } = useDroppable({ id: categoryDropId(category) });
+    const { intent } = useTreeDnd();
+    const start = useDropZone({ kind: "cat-start", category });
+    const end = useDropZone({ kind: "cat-end", category });
     const checklistCount = entries.reduce((n, e) => n + (e.kind === "checklist" ? 1 : e.checklists.length), 0);
     const q = query.trim().toLowerCase();
 
@@ -38,8 +39,8 @@ export function CategoryGroup({ dbId, label, sectionWord, category, entries, sel
                 <ChecklistLeaf
                     key={entry.id}
                     checklist={entry}
+                    category={category}
                     selected={entry.id === selectedId}
-                    inSection={false}
                     onSelect={onSelect}
                 />
             );
@@ -60,7 +61,7 @@ export function CategoryGroup({ dbId, label, sectionWord, category, entries, sel
 
     return (
         <>
-            <div className="tree-cat">
+            <div className="tree-cat" ref={start.setNodeRef} {...start.zoneProps}>
                 <span>{label}</span>
                 <span className="count">{checklistCount}</span>
                 <button
@@ -78,15 +79,10 @@ export function CategoryGroup({ dbId, label, sectionWord, category, entries, sel
                     §
                 </button>
             </div>
-            {q ? (
-                entries.map(renderEntry)
-            ) : (
-                <div ref={setCategoryDropRef}>
-                    <SortableContext items={entries.map((e) => e.id)} strategy={verticalListSortingStrategy}>
-                        {entries.map(renderEntry)}
-                    </SortableContext>
-                </div>
-            )}
+            {entries.map(renderEntry)}
+            <div className="tree-cat-end" ref={end.setNodeRef} {...end.zoneProps}>
+                {isSlot(intent, category, undefined, null) && <DropLine />}
+            </div>
         </>
     );
 }
@@ -110,8 +106,9 @@ function SectionBlock({
 }) {
     const dispatch = useDispatch();
     const confirm = useConfirm();
-    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: section.id });
-    const { setNodeRef: setDropRef } = useDroppable({ id: sectionDropId(section.id) });
+    const { intent, dragDisabled } = useTreeDnd();
+    const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: section.id, disabled: dragDisabled });
+    const header = useDropZone({ kind: "section", category, id: section.id });
 
     const q = query.trim().toLowerCase();
     const checklists = q ? section.checklists.filter((cl) => cl.name.toLowerCase().includes(q)) : section.checklists;
@@ -132,52 +129,65 @@ function SectionBlock({
     }
 
     return (
-        <div ref={setNodeRef} style={{ transform: CSS.Transform.toString(transform), transition }}>
-            <div className={`tree-section-header${isDragging ? " dragging" : ""}`} {...attributes} {...listeners}>
-                <span className="sh-name" onPointerDown={(e) => e.stopPropagation()}>
-                    <EditableText
-                        value={section.name}
-                        onCommit={(next) =>
-                            dispatch({ type: "rename-section", dbId, category, id: section.id, name: next })
-                        }
-                        multiline
-                        clampLines={2}
-                        commit="blur"
-                    />
-                </span>
-                <button
-                    className="sh-add"
-                    title={`Add checklist to ${section.name}`}
-                    onPointerDown={(e) => e.stopPropagation()}
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        dispatch({ type: "add-checklist", dbId, category, sectionId: section.id });
+        <>
+            {isSlot(intent, category, undefined, section.id) && <DropLine />}
+            <div
+                className={`tree-section${isDragging ? " dragging" : ""}${intent?.sectionId === section.id ? " drop-into" : ""}`}
+                {...{ [SECTION_BLOCK_ATTR]: section.id }}
+            >
+                <div
+                    ref={(node) => {
+                        setNodeRef(node);
+                        header.setNodeRef(node);
                     }}
+                    {...header.zoneProps}
+                    className="tree-section-header"
+                    {...attributes}
+                    {...listeners}
                 >
-                    +
-                </button>
-                <button
-                    className="tree-del"
-                    title={`Delete ${sectionWord.toLowerCase()}`}
-                    onPointerDown={(e) => e.stopPropagation()}
-                    onClick={handleDeleteSection}
-                >
-                    <Icon name="trash" size={11} />
-                </button>
-            </div>
-            <div ref={setDropRef}>
-                <SortableContext items={checklists.map((cl) => cl.id)} strategy={verticalListSortingStrategy}>
-                    {checklists.map((cl) => (
-                        <ChecklistLeaf
-                            key={cl.id}
-                            checklist={cl}
-                            selected={cl.id === selectedId}
-                            inSection
-                            onSelect={onSelect}
+                    <span className="sh-name" onPointerDown={(e) => e.stopPropagation()}>
+                        <EditableText
+                            value={section.name}
+                            onCommit={(next) =>
+                                dispatch({ type: "rename-section", dbId, category, id: section.id, name: next })
+                            }
+                            multiline
+                            clampLines={2}
+                            commit="blur"
                         />
-                    ))}
-                </SortableContext>
+                    </span>
+                    <button
+                        className="sh-add"
+                        title={`Add checklist to ${section.name}`}
+                        onPointerDown={(e) => e.stopPropagation()}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            dispatch({ type: "add-checklist", dbId, category, sectionId: section.id });
+                        }}
+                    >
+                        +
+                    </button>
+                    <button
+                        className="tree-del"
+                        title={`Delete ${sectionWord.toLowerCase()}`}
+                        onPointerDown={(e) => e.stopPropagation()}
+                        onClick={handleDeleteSection}
+                    >
+                        <Icon name="trash" size={11} />
+                    </button>
+                </div>
+                {checklists.map((cl) => (
+                    <ChecklistLeaf
+                        key={cl.id}
+                        checklist={cl}
+                        category={category}
+                        sectionId={section.id}
+                        selected={cl.id === selectedId}
+                        onSelect={onSelect}
+                    />
+                ))}
+                {isSlot(intent, category, section.id, null) && <DropLine inSection />}
             </div>
-        </div>
+        </>
     );
 }

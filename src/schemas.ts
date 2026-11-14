@@ -177,7 +177,10 @@ export type PackageExport = z.infer<typeof packageExportSchema>;
 
 /* ── internal <-> external conversion ──────────────────────────── */
 
-function stripFollowOn(followOn: string[] | undefined, nameOf: (id: string) => string | undefined): string[] | undefined {
+function stripFollowOn(
+    followOn: string[] | undefined,
+    nameOf: (id: string) => string | undefined,
+): string[] | undefined {
     return followOn?.map((id) => nameOf(id) ?? id);
 }
 
@@ -239,7 +242,10 @@ function stripItem(it: ChecklistItem, nameOf: (id: string) => string | undefined
     }
 }
 
-function hydrateFollowOn(followOn: string[] | undefined, idOf: (name: string) => string | undefined): string[] | undefined {
+function hydrateFollowOn(
+    followOn: string[] | undefined,
+    idOf: (name: string) => string | undefined,
+): string[] | undefined {
     return followOn?.map((name) => idOf(name) ?? name);
 }
 

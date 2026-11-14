@@ -1,6 +1,15 @@
 import { createContext, type Dispatch, useContext } from "react";
 
-import type { Category, CategoryEntry, Checklist, ChecklistDatabase, ChecklistItem, ItemPath, ItemType, Section } from "./checklist";
+import type {
+    Category,
+    CategoryEntry,
+    Checklist,
+    ChecklistDatabase,
+    ChecklistItem,
+    ItemPath,
+    ItemType,
+    Section,
+} from "./checklist";
 import type { CasMessage } from "./lib/cas";
 import { seedDatabases } from "./mockData";
 import { uid } from "./schemas";
@@ -17,27 +26,6 @@ export function parseDropId(id: string): ListLoc | null {
     const m = id.match(/^list:branch:([^:]+):(.+)$/);
     if (m) return { kind: "branch", parentId: m[1], key: decodeURIComponent(m[2]) };
     return null;
-}
-
-/* ── sidebar checklist-tree drop targets ─────────────────────────
- * Distinct from checklist/section ids so a drop onto an empty (or trailing)
- * list can still resolve to a container even when there's nothing to drop
- * "onto". All three categories now support both top-level entries and
- * sections, so both drop-target kinds apply uniformly to all of them. */
-export function categoryDropId(category: Category): string {
-    return `checklist-drop:category:${category}`;
-}
-export function parseCategoryDropId(id: string): Category | null {
-    const m = id.match(/^checklist-drop:category:(.+)$/);
-    if (!m) return null;
-    return m[1] === "normal" || m[1] === "non_normal" || m[1] === "procedure" ? (m[1] as Category) : null;
-}
-export function sectionDropId(sectionId: string): string {
-    return `checklist-drop:section:${sectionId}`;
-}
-export function parseSectionDropId(id: string): string | null {
-    const m = id.match(/^checklist-drop:section:(.+)$/);
-    return m ? m[1] : null;
 }
 
 export interface AppState {
@@ -71,14 +59,18 @@ export type Action =
     | { type: "add-section"; dbId: string; category: Category }
     | { type: "rename-section"; dbId: string; category: Category; id: string; name: string }
     | { type: "delete-section"; dbId: string; category: Category; id: string }
-    | { type: "reorder-category-entries"; dbId: string; category: Category; activeId: string; overId: string }
+    /** Moves a section to the top level of `toCategory`, inserted before the
+     *  entry `beforeId` (or appended when it's absent). */
+    | { type: "move-section"; dbId: string; sectionId: string; toCategory: Category; beforeId?: string }
+    /** Moves a checklist into `toCategory` (and `toSectionId`, if given),
+     *  inserted before the sibling `beforeId` (or appended when it's absent). */
     | {
           type: "move-checklist";
           dbId: string;
           checklistId: string;
           toCategory: Category;
           toSectionId?: string;
-          overId?: string;
+          beforeId?: string;
       }
     | { type: "import-checklist"; dbId: string; category: Category; sectionId?: string; checklist: Checklist }
     | { type: "import-database"; database: ChecklistDatabase }
@@ -326,12 +318,7 @@ function removeChecklistAnywhere(
 
 /** Inserts a checklist into `category` (and, if `sectionId` is given, that
  *  section) at `index`. With no `sectionId`, the checklist becomes a top-level
- *  entry spliced directly into the category's interleaved entry list. The
- *  index must be resolved against the list *before* the checklist was removed
- *  from wherever it used to live — for a same-container move that's the same
- *  array, and re-deriving the index from the post-removal list would land one
- *  slot early (mirrors `arrayMove`, which likewise splices at the pre-removal
- *  target index). */
+ *  entry spliced directly into the category's interleaved entry list. */
 function insertChecklist(
     db: ChecklistDatabase,
     category: Category,
@@ -510,7 +497,10 @@ function reducer(state: AppState, action: Action): AppState {
                         if (action.key !== "YES" && action.key !== "NO") return it;
                         return {
                             ...it,
-                            paths: { ...it.paths, [action.key]: { ...it.paths[action.key], followOn: action.followOn } },
+                            paths: {
+                                ...it.paths,
+                                [action.key]: { ...it.paths[action.key], followOn: action.followOn },
+                            },
                         };
                     }
                     if (it.type === "multi-select") {
@@ -624,16 +614,29 @@ function reducer(state: AppState, action: Action): AppState {
             };
         }
 
-        case "reorder-category-entries":
+        case "move-section":
             return {
                 ...state,
                 databases: state.databases.map((db) => {
                     if (db.id !== action.dbId) return db;
-                    const list = entriesOf(db, action.category);
-                    const from = list.findIndex((e) => e.id === action.activeId);
-                    const to = list.findIndex((e) => e.id === action.overId);
-                    if (from < 0 || to < 0 || from === to) return db;
-                    return withEntries(db, action.category, arrayMove(list, from, to));
+                    let section: Section | undefined;
+                    let removed = db;
+                    for (const category of ["normal", "non_normal", "procedure"] as const) {
+                        const found = findSection(db, category, action.sectionId);
+                        if (found) {
+                            section = found;
+                            removed = withEntries(
+                                db,
+                                category,
+                                entriesOf(db, category).filter((e) => e.id !== action.sectionId),
+                            );
+                        }
+                    }
+                    if (!section) return db;
+                    const list = entriesOf(removed, action.toCategory).slice();
+                    const at = action.beforeId ? list.findIndex((e) => e.id === action.beforeId) : -1;
+                    list.splice(at < 0 ? list.length : at, 0, section);
+                    return withEntries(removed, action.toCategory, list);
                 }),
             };
 
@@ -642,20 +645,22 @@ function reducer(state: AppState, action: Action): AppState {
                 ...state,
                 databases: state.databases.map((db) => {
                     if (db.id !== action.dbId) return db;
-
-                    // Resolve the drop index against the list *before* removal (see
-                    // insertChecklist's doc comment) — for a same-container move this
-                    // is the same array the checklist is about to be removed from.
-                    const targetList: { id: string }[] =
-                        action.toSectionId !== undefined
-                            ? (findSection(db, action.toCategory, action.toSectionId)?.checklists ?? [])
-                            : entriesOf(db, action.toCategory);
-                    const rawIndex = action.overId ? targetList.findIndex((e) => e.id === action.overId) : -1;
-                    const toIndex = rawIndex < 0 ? targetList.length : rawIndex;
-
                     const { db: removedDb, checklist } = removeChecklistAnywhere(db, action.checklistId);
                     if (!checklist) return db;
-                    return insertChecklist(removedDb, action.toCategory, action.toSectionId, checklist, toIndex);
+                    // Resolved against the list *after* removal, so `beforeId` means
+                    // the same slot regardless of where the checklist came from.
+                    const targetList: { id: string }[] =
+                        action.toSectionId !== undefined
+                            ? (findSection(removedDb, action.toCategory, action.toSectionId)?.checklists ?? [])
+                            : entriesOf(removedDb, action.toCategory);
+                    const at = action.beforeId ? targetList.findIndex((e) => e.id === action.beforeId) : -1;
+                    return insertChecklist(
+                        removedDb,
+                        action.toCategory,
+                        action.toSectionId,
+                        checklist,
+                        at < 0 ? targetList.length : at,
+                    );
                 }),
             };
         }

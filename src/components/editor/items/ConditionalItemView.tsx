@@ -29,7 +29,12 @@ export function ConditionalItemView({ item, number }: { item: ConditionalItem; n
                         <Icon name="copy" size={10} />
                     </button>
                 )}
-                <PathFollowOnToggle active={yes.active} unresolved={yes.unresolved} color={color} onClick={yes.toggle} />
+                <PathFollowOnToggle
+                    active={yes.active}
+                    unresolved={yes.unresolved}
+                    color={color}
+                    onClick={yes.toggle}
+                />
             </div>
             {yes.active && (
                 <div className="vH-path-followon">

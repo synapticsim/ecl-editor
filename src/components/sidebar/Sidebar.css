@@ -216,8 +216,26 @@
     background: var(--bg-2);
     color: var(--fg-1);
 }
+/* Checklists in a section keep the category's guide line and add a second,
+ * inner one under the section's § mark to show the nesting. */
 .tree-leaf.in-section {
-    padding-left: 24px;
+    padding-left: 28px;
+}
+.tree-leaf.in-section::after {
+    content: "";
+    position: absolute;
+    left: 12px;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: var(--bd-1);
+}
+.tree-leaf.in-section.selected {
+    border-left-color: var(--bd-1);
+}
+.tree-leaf.in-section.selected::before {
+    left: 12px;
+    z-index: 1;
 }
 .tree-leaf .leaf-drag {
     width: 10px;
@@ -264,15 +282,69 @@
     content: "";
     position: absolute;
     left: -1px;
-    top: 4px;
-    bottom: 4px;
+    top: 0;
+    bottom: 0;
     width: 2px;
     background: var(--accent);
-    border-radius: 1px;
 }
 .tree-leaf.selected .leaf-meta {
     color: var(--accent);
     opacity: 0.7;
+}
+
+/* drag-and-drop: insertion line + drop-into-section highlight */
+.tree-cat-end {
+    min-height: 8px;
+}
+.tree-drop-slot {
+    position: relative;
+    height: 0;
+    z-index: 2;
+    pointer-events: none;
+}
+.tree-drop-line {
+    position: absolute;
+    left: 18px;
+    right: 4px;
+    top: -1px;
+    height: 2px;
+    border-radius: 1px;
+    background: var(--accent);
+}
+.tree-drop-line.in-section {
+    left: 31px;
+}
+.tree-drop-line::before {
+    content: "";
+    position: absolute;
+    left: -3px;
+    top: -2px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    border: 1.5px solid var(--accent);
+    background: var(--bg-1, #0b0b10);
+    box-sizing: border-box;
+}
+.tree-section {
+    border-radius: 5px;
+    transition:
+        background 0.1s,
+        box-shadow 0.1s;
+}
+.tree-section.drop-into {
+    background: var(--accent-soft);
+    box-shadow: inset 0 0 0 1px var(--accent-line);
+}
+.tree-section.drop-into > .tree-section-header {
+    color: var(--fg-1);
+}
+.tree-section.drop-into > .tree-section-header::before {
+    color: var(--accent);
+}
+.tree-leaf.dragging,
+.tree-section.dragging {
+    opacity: 0.35;
 }
 
 /* footer */

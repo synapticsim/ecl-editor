@@ -12,9 +12,7 @@ export function PathFollowOnToggle({ active, unresolved, color, onClick }: Props
         <button
             className={`vH-flag${active ? " active" : ""}${unresolved ? " warn" : ""}`}
             style={{ "--sensed": color } as React.CSSProperties}
-            title={
-                unresolved ? "Follow-on checklist not found in this package" : "Follow on when this branch is taken"
-            }
+            title={unresolved ? "Follow-on checklist not found in this package" : "Follow on when this branch is taken"}
             onClick={onClick}
         >
             FOLLOW-ON{unresolved && " ⚠"}
