@@ -6,6 +6,7 @@ import { ECL_VARIABLE_NAMES, varIndex, varName } from "../../../lib/vars";
 import { allChecklists, useDispatch, useSelectedChecklist } from "../../../state";
 import { Combobox } from "../../common/Combobox";
 import { EditableText } from "../../common/EditableText";
+import { FollowOnRows } from "./FollowOnRows";
 import { RowFrame } from "./RowFrame";
 
 export function ActionItemView({ item, number }: { item: ActionItem; number: string }) {
@@ -14,7 +15,10 @@ export function ActionItemView({ item, number }: { item: ActionItem; number: str
     const update = (patch: Partial<ActionItem>) => dispatch({ type: "update-item", itemId: item.id, patch });
 
     const [deferOpen, setDeferOpen] = useState(!!item.defer);
-    const [followOnOpen, setFollowOnOpen] = useState(!!item.followOn);
+    const [followOnOpen, setFollowOnOpen] = useState(!!item.followOn && item.followOn.length > 0);
+    // A pending, not-yet-resolved extra follow-on row — kept out of item.followOn
+    // itself so an unfilled slot never trips the "unresolved" warning.
+    const [extraFollowOnBlank, setExtraFollowOnBlank] = useState(false);
     const [timerOpen, setTimerOpen] = useState(item.timer !== undefined);
     const [commentOpen, setCommentOpen] = useState(item.comment !== undefined);
 
@@ -32,12 +36,14 @@ export function ActionItemView({ item, number }: { item: ActionItem; number: str
     const color = ITEM_TYPE_META.action.cssVar;
 
     const deferActive = !!item.defer || deferOpen;
-    const followOnActive = !!item.followOn || followOnOpen;
+    const followOnActive = (!!item.followOn && item.followOn.length > 0) || followOnOpen;
     const timerActive = item.timer !== undefined || timerOpen;
     const commentActive = item.comment !== undefined || commentOpen;
 
     const deferUnresolved = !!item.defer && !isResolved(item.defer);
-    const followOnUnresolved = !!item.followOn && !isResolved(item.followOn);
+    const followOnUnresolved = !!item.followOn?.some((id) => !isResolved(id));
+
+    const baseFollowOn = item.followOn ?? [];
 
     function toggleDefer() {
         if (item.defer !== undefined) {
@@ -49,11 +55,34 @@ export function ActionItemView({ item, number }: { item: ActionItem; number: str
     }
 
     function toggleFollowOn() {
-        if (item.followOn !== undefined) {
+        if (item.followOn !== undefined && item.followOn.length > 0) {
             update({ followOn: undefined });
             setFollowOnOpen(false);
+            setExtraFollowOnBlank(false);
         } else {
             setFollowOnOpen(!followOnOpen);
+        }
+    }
+
+    function setFollowOnAt(index: number, name: string) {
+        const id = idOf(name);
+        if (!id) return;
+        if (index < baseFollowOn.length) {
+            const next = baseFollowOn.slice();
+            next[index] = id;
+            update({ followOn: next });
+        } else {
+            update({ followOn: [...baseFollowOn, id] });
+            setExtraFollowOnBlank(false);
+        }
+    }
+
+    function removeFollowOnAt(index: number) {
+        if (index < baseFollowOn.length) {
+            const next = baseFollowOn.filter((_, i) => i !== index);
+            update({ followOn: next.length > 0 ? next : undefined });
+        } else {
+            setExtraFollowOnBlank(false);
         }
     }
 
@@ -211,17 +240,15 @@ export function ActionItemView({ item, number }: { item: ActionItem; number: str
                 </div>
             )}
             {followOnActive && (
-                <div className="vH-meta" style={{ "--sensed": color } as React.CSSProperties}>
-                    <span className="vH-meta-k">FOLLOW-ON</span>
-                    <span className="vH-meta-v">
-                        <Combobox
-                            value={item.followOn ? nameOf(item.followOn) : ""}
-                            options={options}
-                            onChange={(name) => update({ followOn: idOf(name) })}
-                            placeholder="select checklist…"
-                        />
-                    </span>
-                </div>
+                <FollowOnRows
+                    followOn={baseFollowOn}
+                    extraBlank={extraFollowOnBlank}
+                    onAddBlank={() => setExtraFollowOnBlank(true)}
+                    onSetAt={setFollowOnAt}
+                    onRemoveAt={removeFollowOnAt}
+                    nameOf={nameOf}
+                    options={options}
+                />
             )}
             {commentActive && (
                 <EditableText

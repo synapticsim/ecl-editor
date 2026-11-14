@@ -1,4 +1,5 @@
 import {
+    type CollisionDetection,
     closestCenter,
     DndContext,
     type DragEndEvent,
@@ -6,18 +7,19 @@ import {
     DragOverlay,
     type DragStartEvent,
     PointerSensor,
+    pointerWithin,
     useSensor,
     useSensors,
 } from "@dnd-kit/core";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-import type { Category, ChecklistDatabase } from "../../checklist";
+import type { ChecklistDatabase, Section } from "../../checklist";
 import { Icon } from "../../icons";
-import { allChecklists, locateChecklist, NORMAL_DROP_ID, parseSectionDropId, useDispatch } from "../../state";
+import { allChecklists, useDispatch } from "../../state";
 import { useConfirm } from "../common/confirmContext";
 import { EditableText } from "../common/EditableText";
 import { CategoryGroup } from "./CategoryGroup";
-import { SectionedGroup } from "./SectionedGroup";
+import { CATEGORIES, type DropIntent, type DropZone, resolveIntent, TreeDndContext } from "./treeDnd";
 
 interface Props {
     db: ChecklistDatabase;
@@ -27,39 +29,15 @@ interface Props {
     onSelect: (id: string) => void;
 }
 
-interface DropTarget {
-    category: Category;
-    sectionId?: string;
-    overChecklistId?: string;
-}
-
-function resolveDropTarget(db: ChecklistDatabase, overId: string): DropTarget | null {
-    if (overId === NORMAL_DROP_ID) return { category: "normal" };
-    if (db.categories.normal.some((cl) => cl.id === overId)) return { category: "normal", overChecklistId: overId };
-
-    const dropSectionId = parseSectionDropId(overId);
-    if (dropSectionId) {
-        for (const category of ["non_normal", "procedure"] as const) {
-            if (db.categories[category].some((s) => s.id === dropSectionId)) {
-                return { category, sectionId: dropSectionId };
-            }
-        }
-        return null;
-    }
-
-    for (const category of ["non_normal", "procedure"] as const) {
-        for (const sec of db.categories[category]) {
-            if (sec.id === overId) return { category, sectionId: sec.id };
-            if (sec.checklists.some((cl) => cl.id === overId)) {
-                return { category, sectionId: sec.id, overChecklistId: overId };
-            }
-        }
-    }
-    return null;
-}
+// The row under the pointer decides the slot; fall back to the nearest row
+// when the pointer is in a gap between rows.
+const collisionDetection: CollisionDetection = (args) => {
+    const hits = pointerWithin(args);
+    return hits.length > 0 ? hits : closestCenter(args);
+};
 
 function isSectionId(db: ChecklistDatabase, id: string): boolean {
-    return db.categories.non_normal.some((s) => s.id === id) || db.categories.procedure.some((s) => s.id === id);
+    return CATEGORIES.some((category) => db.categories[category].some((e) => e.kind === "section" && e.id === id));
 }
 
 export function DatabaseNode({ db, defaultOpen, selectedId, query, onSelect }: Props) {
@@ -78,71 +56,82 @@ export function DatabaseNode({ db, defaultOpen, selectedId, query, onSelect }: P
         if (ok) dispatch({ type: "delete-database", dbId: db.id });
     }
 
-    function handleDragStart(e: DragStartEvent) {
-        setActiveId(String(e.active.id));
+    const [intent, setIntent] = useState<DropIntent | null>(null);
+    const pointerY = useRef(0);
+    const overZone = useRef<DropZone | null>(null);
+    const dragging = useRef<{ id: string; isSection: boolean } | null>(null);
+    const dbRef = useRef(db);
+    dbRef.current = db;
+
+    function recompute() {
+        const d = dragging.current;
+        const zone = overZone.current;
+        setIntent(d && zone ? resolveIntent(dbRef.current, d.id, d.isSection, zone, pointerY.current) : null);
     }
 
-    // Cross-container moves relocate live as you drag over a different
-    // category/section (same-container reordering previews natively via
-    // SortableContext and is finalized on drag-end).
-    function handleDragOver(e: DragOverEvent) {
-        const { active, over } = e;
-        if (!over) return;
-        const activeIdStr = String(active.id);
-        const overId = String(over.id);
-        if (activeIdStr === overId || isSectionId(db, activeIdStr)) return;
+    // dnd-kit's `over` only changes when the pointer crosses into another row;
+    // the before/after half within a row needs the raw pointer position.
+    useEffect(() => {
+        if (!activeId) return;
+        const onMove = (e: PointerEvent) => {
+            pointerY.current = e.clientY;
+            recompute();
+        };
+        window.addEventListener("pointermove", onMove);
+        return () => window.removeEventListener("pointermove", onMove);
+        // biome-ignore lint/correctness/useExhaustiveDependencies: recompute reads refs only
+    }, [activeId]);
 
-        const loc = locateChecklist(db, activeIdStr);
-        const target = resolveDropTarget(db, overId);
-        if (!loc || !target) return;
-
-        const sameContainer = loc.category === target.category && (loc.section?.id ?? undefined) === target.sectionId;
-        if (sameContainer) return;
-
-        dispatch({
-            type: "move-checklist",
-            dbId: db.id,
-            checklistId: activeIdStr,
-            toCategory: target.category,
-            toSectionId: target.sectionId,
-            overId: target.overChecklistId,
-        });
-    }
-
-    function handleDragEnd(e: DragEndEvent) {
+    function resetDrag() {
         setActiveId(null);
-        const { active, over } = e;
-        if (!over) return;
-        const activeIdStr = String(active.id);
-        const overId = String(over.id);
-        if (activeIdStr === overId) return;
+        setIntent(null);
+        dragging.current = null;
+        overZone.current = null;
+    }
 
-        if (isSectionId(db, activeIdStr)) {
-            for (const category of ["non_normal", "procedure"] as const) {
-                const list = db.categories[category];
-                if (list.some((s) => s.id === activeIdStr) && list.some((s) => s.id === overId)) {
-                    dispatch({ type: "reorder-sections", dbId: db.id, category, activeId: activeIdStr, overId });
-                }
-            }
-            return;
+    function handleDragStart(e: DragStartEvent) {
+        const id = String(e.active.id);
+        if (e.activatorEvent instanceof PointerEvent) pointerY.current = e.activatorEvent.clientY;
+        dragging.current = { id, isSection: isSectionId(db, id) };
+        setActiveId(id);
+    }
+
+    function handleDragOver(e: DragOverEvent) {
+        overZone.current = (e.over?.data.current?.zone as DropZone | undefined) ?? null;
+        recompute();
+    }
+
+    function handleDragEnd(_e: DragEndEvent) {
+        const d = dragging.current;
+        const target = intent;
+        resetDrag();
+        if (!d || !target) return;
+        if (d.isSection) {
+            dispatch({
+                type: "move-section",
+                dbId: db.id,
+                sectionId: d.id,
+                toCategory: target.category,
+                beforeId: target.beforeId ?? undefined,
+            });
+        } else {
+            dispatch({
+                type: "move-checklist",
+                dbId: db.id,
+                checklistId: d.id,
+                toCategory: target.category,
+                toSectionId: target.sectionId,
+                beforeId: target.beforeId ?? undefined,
+            });
         }
-
-        const target = resolveDropTarget(db, overId);
-        if (!target) return;
-        dispatch({
-            type: "move-checklist",
-            dbId: db.id,
-            checklistId: activeIdStr,
-            toCategory: target.category,
-            toSectionId: target.sectionId,
-            overId: target.overChecklistId,
-        });
     }
 
     const activeChecklist = activeId ? (allChecklists(db).find((cl) => cl.id === activeId) ?? null) : null;
     const activeSection =
         activeId && !activeChecklist
-            ? ([...db.categories.non_normal, ...db.categories.procedure].find((s) => s.id === activeId) ?? null)
+            ? (CATEGORIES.flatMap((category) => db.categories[category]).find(
+                  (e): e is Section => e.kind === "section" && e.id === activeId,
+              ) ?? null)
             : null;
 
     return (
@@ -188,52 +177,56 @@ export function DatabaseNode({ db, defaultOpen, selectedId, query, onSelect }: P
             {open && (
                 <DndContext
                     sensors={sensors}
-                    collisionDetection={closestCenter}
+                    collisionDetection={collisionDetection}
                     onDragStart={handleDragStart}
                     onDragOver={handleDragOver}
                     onDragEnd={handleDragEnd}
-                    onDragCancel={() => setActiveId(null)}
+                    onDragCancel={resetDrag}
                 >
-                    <CategoryGroup
-                        dbId={db.id}
-                        label="Normal"
-                        checklists={db.categories.normal}
-                        selectedId={selectedId}
-                        query={query}
-                        onSelect={onSelect}
-                    />
-                    <SectionedGroup
-                        dbId={db.id}
-                        label="Non-Normal"
-                        sectionWord="System"
-                        category="non_normal"
-                        sections={db.categories.non_normal}
-                        selectedId={selectedId}
-                        query={query}
-                        onSelect={onSelect}
-                    />
-                    <SectionedGroup
-                        dbId={db.id}
-                        label="Procedure"
-                        sectionWord="Section"
-                        category="procedure"
-                        sections={db.categories.procedure}
-                        selectedId={selectedId}
-                        query={query}
-                        onSelect={onSelect}
-                    />
-                    <DragOverlay>
-                        {activeChecklist && (
-                            <div className="tree-leaf overlay">
-                                <span className="leaf-name">{activeChecklist.name}</span>
-                            </div>
-                        )}
-                        {activeSection && (
-                            <div className="tree-section-header overlay">
-                                <span className="sh-name">{activeSection.name}</span>
-                            </div>
-                        )}
-                    </DragOverlay>
+                    <TreeDndContext.Provider value={{ intent, dragDisabled: query.trim() !== "" }}>
+                        <CategoryGroup
+                            dbId={db.id}
+                            label="Normal"
+                            sectionWord="Section"
+                            category="normal"
+                            entries={db.categories.normal}
+                            selectedId={selectedId}
+                            query={query}
+                            onSelect={onSelect}
+                        />
+                        <CategoryGroup
+                            dbId={db.id}
+                            label="Non-Normal"
+                            sectionWord="System"
+                            category="non_normal"
+                            entries={db.categories.non_normal}
+                            selectedId={selectedId}
+                            query={query}
+                            onSelect={onSelect}
+                        />
+                        <CategoryGroup
+                            dbId={db.id}
+                            label="Procedure"
+                            sectionWord="Section"
+                            category="procedure"
+                            entries={db.categories.procedure}
+                            selectedId={selectedId}
+                            query={query}
+                            onSelect={onSelect}
+                        />
+                        <DragOverlay dropAnimation={null}>
+                            {activeChecklist && (
+                                <div className="tree-leaf overlay">
+                                    <span className="leaf-name">{activeChecklist.name}</span>
+                                </div>
+                            )}
+                            {activeSection && (
+                                <div className="tree-section-header overlay">
+                                    <span className="sh-name">{activeSection.name}</span>
+                                </div>
+                            )}
+                        </DragOverlay>
+                    </TreeDndContext.Provider>
                 </DndContext>
             )}
         </div>

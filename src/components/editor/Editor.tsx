@@ -33,10 +33,10 @@ function buildContainerMap(items: ChecklistItem[]): Record<string, string[]> {
         map[dropId] = list.map((it) => it.id);
         for (const it of list) {
             if (it.type === "conditional") {
-                walk(it.paths.YES, branchDropId(it.id, "YES"));
-                walk(it.paths.NO, branchDropId(it.id, "NO"));
+                walk(it.paths.YES.items, branchDropId(it.id, "YES"));
+                walk(it.paths.NO.items, branchDropId(it.id, "NO"));
             } else if (it.type === "multi-select") {
-                for (const key of Object.keys(it.paths)) walk(it.paths[key], branchDropId(it.id, key));
+                for (const key of Object.keys(it.paths)) walk(it.paths[key].items, branchDropId(it.id, key));
             }
         }
     }

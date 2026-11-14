@@ -9,8 +9,8 @@ export interface ActionItem {
     limitation?: boolean;
     /** Id of another checklist this item defers to. */
     defer?: string;
-    /** Id of another checklist to follow on to after this item. */
-    followOn?: string;
+    /** Ids of other checklists to follow on to after this item. */
+    followOn?: string[];
     /** Numeric ECL_VARIABLE index (see lib/vars.ts), not the variable name. */
     sensed?: number;
     inverted?: boolean;
@@ -20,13 +20,21 @@ export interface ActionItem {
     comment?: string;
 }
 
+/** A conditional/multi-select branch: its items, plus an optional follow-on
+ *  triggered when the branch is taken/selected — independent of whether it
+ *  has any items (a "router" branch may have none). */
+export interface ItemPath {
+    items: ChecklistItem[];
+    followOn?: string[];
+}
+
 export interface ConditionalItem {
     type: "conditional";
     id: string;
     challenge: string;
     paths: {
-        YES: ChecklistItem[];
-        NO: ChecklistItem[];
+        YES: ItemPath;
+        NO: ItemPath;
     };
 }
 
@@ -34,7 +42,7 @@ export interface MultiSelectItem {
     type: "multi-select";
     id: string;
     challenge: string;
-    paths: { [response: string]: ChecklistItem[] };
+    paths: { [response: string]: ItemPath };
 }
 
 export interface FreeTextItem {
@@ -42,7 +50,7 @@ export interface FreeTextItem {
     id: string;
     text: string;
     defer?: string;
-    followOn?: string;
+    followOn?: string[];
 }
 
 export interface FormFeedItem {
@@ -58,7 +66,7 @@ export interface NoteItem {
     text: string;
     level: NoteLevel;
     defer?: string;
-    followOn?: string;
+    followOn?: string[];
 }
 
 export type ChecklistItem = ActionItem | ConditionalItem | MultiSelectItem | FreeTextItem | FormFeedItem | NoteItem;
@@ -70,7 +78,7 @@ export type Category = "normal" | "non_normal" | "procedure";
 export type Phase = "pre-flight" | "in-flight" | "post-flight";
 
 export interface Checklist {
-    kind?: "checklist";
+    kind: "checklist";
     id: string;
     name: string;
     items: ChecklistItem[];
@@ -88,14 +96,19 @@ export interface Section {
     checklists: Checklist[];
 }
 
+/** An entry within a category's list: either a top-level checklist or a named
+ *  section of checklists. All three categories (normal, non_normal, procedure)
+ *  use this same interleaved shape. */
+export type CategoryEntry = Checklist | Section;
+
 export interface ChecklistDatabase {
     id: string;
     name: string;
     partNumber?: string;
     categories: {
-        normal: Checklist[];
-        non_normal: Section[];
-        procedure: Section[];
+        normal: CategoryEntry[];
+        non_normal: CategoryEntry[];
+        procedure: CategoryEntry[];
     };
 }
 

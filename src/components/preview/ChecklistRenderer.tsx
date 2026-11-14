@@ -70,7 +70,7 @@ function computeLayout(items: ChecklistItem[]): LayoutItem[] {
             result.push({ item, startRow: pos });
             pos += h;
             if (item.type === "conditional" || item.type === "multi-select") {
-                Object.values(item.paths).forEach(visit);
+                Object.values(item.paths).forEach((path) => visit(path.items));
             }
         }
     }

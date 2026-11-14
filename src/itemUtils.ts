@@ -4,11 +4,11 @@ export function findItem(items: ChecklistItem[], id: string): ChecklistItem | nu
     for (const it of items) {
         if (it.id === id) return it;
         if (it.type === "conditional") {
-            const found = findItem(it.paths.YES, id) ?? findItem(it.paths.NO, id);
+            const found = findItem(it.paths.YES.items, id) ?? findItem(it.paths.NO.items, id);
             if (found) return found;
         } else if (it.type === "multi-select") {
-            for (const list of Object.values(it.paths)) {
-                const found = findItem(list, id);
+            for (const path of Object.values(it.paths)) {
+                const found = findItem(path.items, id);
                 if (found) return found;
             }
         }
@@ -21,9 +21,9 @@ export function countItems(items: ChecklistItem[]): number {
     for (const it of items) {
         n += 1;
         if (it.type === "conditional") {
-            n += countItems(it.paths.YES) + countItems(it.paths.NO);
+            n += countItems(it.paths.YES.items) + countItems(it.paths.NO.items);
         } else if (it.type === "multi-select") {
-            for (const list of Object.values(it.paths)) n += countItems(list);
+            for (const path of Object.values(it.paths)) n += countItems(path.items);
         }
     }
     return n;

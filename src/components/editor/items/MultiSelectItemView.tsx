@@ -1,10 +1,8 @@
 import type { MultiSelectItem } from "../../../checklist";
-import { Icon } from "../../../icons";
 import { ITEM_TYPE_META } from "../../../itemUtils";
 import { useDispatch } from "../../../state";
-import { EditableText } from "../../common/EditableText";
-import { ItemList } from "../ItemList";
 import { BlockFrame } from "./BlockFrame";
+import { MultiSelectBranch } from "./MultiSelectBranch";
 
 export function MultiSelectItemView({ item, number }: { item: MultiSelectItem; number: string }) {
     const dispatch = useDispatch();
@@ -18,49 +16,18 @@ export function MultiSelectItemView({ item, number }: { item: MultiSelectItem; n
     return (
         <BlockFrame item={item} number={number} color={color} pill="SELECT">
             {keys.map((key) => {
-                const list = item.paths[key];
                 const at = startAt;
-                startAt += list.length;
+                startAt += item.paths[key].items.length;
                 return (
-                    <div key={key}>
-                        <div className="vH-branch-label" style={{ "--ic": color } as React.CSSProperties}>
-                            <span className="vH-branch-pill">OPT</span>
-                            <span className="vH-branch-text">
-                                <EditableText
-                                    value={key}
-                                    onCommit={(next) =>
-                                        dispatch({ type: "rename-branch", itemId: item.id, oldKey: key, newKey: next })
-                                    }
-                                    autoSize
-                                    commit="blur"
-                                />
-                            </span>
-                            {list.length > 0 && keys.length > 1 && (
-                                <button
-                                    className="vH-branch-copy"
-                                    title="Copy these items to the other options"
-                                    onClick={() => dispatch({ type: "copy-branch", itemId: item.id, fromKey: key })}
-                                >
-                                    <Icon name="copy" size={10} />
-                                </button>
-                            )}
-                            {canDelete && (
-                                <button
-                                    className="vH-branch-del"
-                                    title="Delete option"
-                                    onClick={() => dispatch({ type: "delete-branch", itemId: item.id, key })}
-                                >
-                                    ×
-                                </button>
-                            )}
-                        </div>
-                        <ItemList
-                            items={list}
-                            loc={{ kind: "branch", parentId: item.id, key }}
-                            numberPrefix={prefix}
-                            startAt={at}
-                        />
-                    </div>
+                    <MultiSelectBranch
+                        key={key}
+                        item={item}
+                        pathKey={key}
+                        color={color}
+                        numberPrefix={prefix}
+                        startAt={at}
+                        canDelete={canDelete}
+                    />
                 );
             })}
             <button className="vH-branch-add" onClick={() => dispatch({ type: "add-branch", itemId: item.id })}>
